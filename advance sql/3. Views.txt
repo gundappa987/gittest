@@ -1,0 +1,355 @@
+select deptno, avg(sal)/2 from emp group by deptno
+
+
+
+  1  create or replace function get_details
+  2  (
+  3    pstr in varchar
+  4  )
+  5  return varchar
+  6  is
+  7  begin
+  8        if regexp_instr(pstr, '[[:digit:]]') > 0 then
+  9  return 'number';
+ 10        elsif regexp_instr(pstr, '[[:alpha:]]') > 0 then
+ 11  return 'character';
+ 12        end if;
+ 13* end;
+SQL> /
+
+Function created.
+
+SQL> select get_details('101') from dual;
+
+GET_DETAILS('101')
+------------------------------------------------------------------------------------------------------------------------
+number
+
+SQL> select get_details('sarlakg') from dual;
+
+GET_DETAILS('SARLAKG')
+------------------------------------------------------------------------------------------------------------------------
+character
+  1  select *
+  2  from emp
+  3  where sal =
+  4     (select max(sal)
+  5     from emp
+  6     group by deptno
+  7     having avg(sal) = (select max(avg(Sal)) from emp group by deptno)
+  8*    )
+SQL> /
+
+     EMPNO ENAME      JOB              MGR HIREDATE         SAL       COMM     DEPTNO
+---------- ---------- --------- ---------- --------- ---------- ---------- ----------
+      7839 KING       PRESIDENT            17-NOV-81       5000                    10
+
+
+
+	
+   
+
+
+				=========================
+					VIEWS
+				=========================
+
+
+* A view is a database object  which is used for providing selective access to the table.
+
+* We can create more than one views on a same table.
+
+* If we drop the base table , the views are not dropped but they become invalid (in-acessable).
+
+* A view doesn't store the data, it just reflects the data in a table.
+
+* Whenever we query from a view, it executes the query on the base table and returns the data 
+[but data is not stored], as a result there is no improvement in the peformance.
+
+* A view is also called as mirror image of the table or virtual table.
+
+* If we update a view it affects the base table.
+
+* We can have view of a view.
+
+* Any (DML) changes performed on views will affect the base tables.
+
+===========================================================================================
+
+Creating a View :-
+==================
+
+[ Follow the stpes below if you get "Insufficient privileges" error ]
+
+[[
+
+sql> conn / as sysdba
+
+sql> grant create view to scott;
+
+]]
+
+
+
+sql> conn scott/tiger
+
+
+sql> create view v5
+     as
+     select ename,job
+     from emp
+     where deptno=20;
+
+sql> select * from v5;
+
+sql> desc v5;
+
+
+Modifying a View :-
+===================
+
+create or replace view v5
+     as
+     select ename,job,sal,comm
+     from emp
+     where deptno = 30
+/
+
+
+
+
+Advantages
+==========
+
+
+a) Column/Row Level restricted access to the table.
+
+b) View doesn't store the data, as a result no memory is consumed.
+
+c) Complex & long queries can be placed in a view for easier reference.
+
+  SQL>  create view v5
+	as
+	select ename ...
+	from emp
+	union
+	select ename ...
+	from emp
+	group by ename
+	having count(*) >1
+	union
+	select pname
+	from prods;
+
+		
+
+  SQL>  select * from v5;
+
+  sql>  select A.id, b.ename
+	from orders A, v5 B
+	where A.id = b.id
+	and A.price > 2000
+	/
+    
+
+d) Dropping a view will not the drop base table [Base table is protected]
+
+
+=============================================================================
+
+=================
+TYPES OF VIEWS :-
+=================
+
+a) Updateable & Non-updatable Views
+	If a view allows updates(Insert/Update/Delete) to its base table, then it is called as an updateable view, if not it is a non-updateable view. 
+A view becomes non-updateable when it is having any of the following statements.
+	A) GROUP BY & group function
+	B) SUBQUERY
+	C) SET OPERATORS
+	D) JOIN CONDITION
+** If the view is non-updateable, we can make it updated using "INSTEAD OF" triggers.
+
+
+b) Simple & Complex Views
+	If a view is having simple SQL statements[SELECT/FROM/WHERE] then it is called simple view, else it will be a complex view. 
+A view will become complex if it is having any of the following statements:-
+	A) GROUP BY & group function
+	B) SUBQUERY
+	C) SET OPERATORS
+	D) JOIN CONDITION
+
+ ** Most of the complex views are non-updateable, most of the simple views are updateable..
+
+
+c) Read-Only Views
+	An updateable view can be made as non-updateable by using "Read-Only" clause. A read-only view will not allow any of the DML statements on it..
+
+
+d) Force Views
+	A force  view is a view created without its base-table.
+	It can be created using "FORCE" keyword. 
+	The view will be in the IN-VALID state.
+	A force view is helpful in creating views before the tables in the production enviornment while deployment.
+ 
+--to check the status of the view..
+select status from user_objects where object_name='V1';
+
+
+============================================
+-- Non-updateable & complex view
+create or replace view test_u1
+as
+select deptno, sum(sal) as tsal
+from emp 
+group by deptno
+/
+
+insert into test_u1 values(90,90000); -- error 
+(ORA-01733: virtual column not allowed here)
+
+============================================
+-- Updateble & Simple view
+
+create or replace view test_u2
+as
+select empno, ename, sal, deptno
+from emp 
+where deptno = 20
+/
+
+insert into test_u2 values(7871, 'scotty', 9000,20); -- works
+============================================
+
+--readonly Views
+
+create or replace view test_u2
+as
+select empno, ename, sal, deptno
+from emp where deptno = 20
+with read only
+/
+
+insert into test_u2 values(7871, 'scotty', 9000,20); -- error
+
+
+=============================================
+
+force views
+===========
+create force view demov
+as 
+select * from prods
+/
+
+select * from demov;  -- error. 
+
+
+"demov" is created in INVALID state
+
+
+-- to check whether object is valid/invalid
+select status
+from user_objects 
+where object_name='DEMOV';
+
+SQL> ALTER VIEW V_TEST_V COMPILE;  -- MANUAL RE-COMPILATION
+
+
+
+=============================================
+
+
+================
+view Constraints
+================
+
+1.
+view read-only constraints  - WITH READ ONLY
+============================================
+
+
+2.
+VIEW WITH CHECK OPTION
+======================
+Generally a view inserts the data even though it cannot display it. 
+If we want a view to "INSERT" only the data which it can display, then we should use "check option"..
+
+create or replace view testvv
+as  
+select empno, ename, deptno, sal 
+from emp 
+where deptno=20
+with check option;
+
+insert into testvv values(7875, 'JJ',10,5000); 	    	-- error.
+insert into testvv values(7876, 'JOHNY',20,5000); 	-- works. 
+
+** Anyway the update statement is not applicable with CHECK OPTION.
+
+---------------
+
+3.
+view unique key constraints
+============================
+We can provide unique key constraints on views
+
+
+4.
+view primary key constraints
+============================
+We can provide primary key constraints on views
+
+===================================================================================
+
+
+
+NOTE:
+=====
+
+rename v1 to v2;
+
+drop view v1;
+
+
+**TRUNCATE is not possible on views
+
+
+ALTER VIEW v1 COMPILE; -- possible, recompiles a view. 
+				(RE-CREATES VIEW).
+				(converts INVALID to VALID)
+			
+
+** VIEW & TABLE CAN'T HAVE A SAME NAME
+
+
+--selecting all the views information .
+select view_name, text 
+from user_views;
+
+
+--SQL statement for a given view
+select  text 
+from user_views 
+where view_name='TESTV';
+
+=======================================================================================
+
+
+** A view can be created by using more than 1 tables (Joins/Set Operators/Sub-query).
+
+create or replace view v1
+as
+select a.ename, b.dname
+from emp a, dept b
+where a.deptno = b.deptno
+/
+
+
+select * from v1
+/
+
+=========================================================================================
+
+
+

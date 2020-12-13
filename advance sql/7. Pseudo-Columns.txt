@@ -1,0 +1,232 @@
+PSEUDO COLUMNS
+--------------
+
+* The pseudo-columns appears to be non existing but they are present in every table.
+* They are system columns and can they can't be updated/dropped.
+
+Pseudo-columns:-
+----------------
+**  rowid
+**  rownum
+**  level
+**  nextval
+**  currval
+
+
+
+ex:-
+====
+
+SQL> select deptno,dname,rowid,rownum from dept
+/
+
+---------------------------------
+---------------------------------
+
+ROWID:-
+------
+* rowid  represents an address of a row
+* ROWID is a 18-digit alpha-numeric value
+* For every new row, a ROWID is generated.
+* ROWID is an unique address  for every row in a Database
+* ROWID is permanent/static value, never changes when record is updated
+* It physically represents where the record is stored in  hard disk (Database).
+
+Note:-
+------
+* Rowid is similar to page number in a book.
+* By using rowid we can fetch the particular record.
+* Inside a table, data is arranged according to rowid.
+
+ ( Rowid1 < Rowid2 < Rowid3 < Rowid4 )
+
+
+Eg:- 
+====
+
+select ename , rowid from emp;
+
+Object id   	File id		Block id    	slot id
+ (6)		(3)		(6)		(3)
+AAAAAB		AAE 		AAAAEA 		AAA
+
+
+** DB can have more than one Database file
+
+** A file can have many blocks
+
+** A block can have many slots
+ 
+** Data is stored in the slots
+
+
+Examples:
+---------
+
+1] Display the first row from the table:
+
+select *
+from emp where rowid = (Select min(rowid) from emp);
+
+
+
+2] Display the name of the person who is present in last row of the table.
+
+select *
+from emp where rowid = (Select max(rowid) from emp);
+
+--------------------------------------------
+
+======
+ROWNUM
+======
+
+* Rownum is a pseudo-column that generates sequential values as and when a record is fetched from a table.
+
+* rownum is an integer value and dynamic (it can change).
+
+* rownum is not stored in the database.
+
+* helps to display the first 'n' rows.
+
+* when we fetch based on the rownum the first record should always be fetched.
+
+Eg:-
+====
+SELECT * FROM EMP WHERE ROWNUM <= 5;
+
+SELECT * FROM EMP WHERE ROWNUM = 1;
+
+SELECT * FROM EMP WHERE ROWNUM = 2; --> NO ROWS
+
+SELECT * FROM EMP WHERE ROWNUM IN (1,2,5,6); -- 1,2 ONLY
+
+--DISPLAY 2ND RECORD ONLY
+SELECT *
+FROM EMP
+WHERE ROWNUM <= 2
+MINUS
+SELECT *
+FROM EMP
+WHERE ROWNUM <= 1
+/
+
+-- DISPLAYS ANY ONE RECORD.
+SELECT ENAME 
+FROM EMP 
+WHERE DEPTNO=30
+AND ROWNUM=1
+/
+
+DELETE FROM EMP WHERE ROWNUM=1
+/
+
+DELETE FROM EMP WHERE ROWNUM <= 5;
+/
+
+
+
+Assignments : ROWID & ROWNUM
+============================
+
+- Write 5 differences b/w ROWID & ROWNUM
+          rowid                                   rownum
+ 1) rowid is represent an address of the row   1) ROWNUM IS GENERATE SEQUENTIAL VALUE AS WHEN WE FETCH THE RECORD\
+ 2) ROWID IS 18 DIGIT ALPHA- NUMERIC VALUE     2) rownum is integer value or daynamic  value
+ 3) rowid staic value never change when we     3) rownum not store in db
+   update record
+ 4) rowid is unique records for each row of a table  4) when we fetch data based on rownum  when shoulde be fetched first record
+ 5) by using rowid it can fetch the particular record 5) it hepls to fetch  first nth rcords of a table
+ 6) inside the table data arrangged by acoording to rowid  
+
+---------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------
+
+
+- Display first  9 records (rownum)
+  select * from emp where rownum<=9;
+- Display last 5 records   (rownum)
+  select * from (select * FROM EMP ORDER BY ROWID DESC) where rownum<=5;
+  select * from emp minus (select * from emp where rownum<=(select count(*)-5 from emp));
+- Display the number of records without using COUNT function
+  select max(rownum) from emp;
+
+- Display alternate records from the table 
+  (ROWID, ROWNUM, MOD function with paired columns in sub-queries)
+OR SELECT * FROM (SELECT ENAME, ROWNUM AS RN FROM EMP) WHERE MOD(RN,2)=0;
+or select * from (select a.* , rownum rn from emp ) where mod(rn,2)!=0;
+ select * from emp where (rowid,0) in (select rowid, mod(rownum,2) from emp);
+   
+- Display 5th record from the table (using ROWNUM & MINUS)
+ select * from emp where rownum<=5
+  minus
+ select * from emp where rownum<=4;
+or 
+select * from emp where rowid in ( select max(rowid) from emp ) WHERE ROWNUM<=5;
+- Display 6th & 9th records from the table (using ROWNUM & MINUS & UNION)
+ (select * FROM EMP WHERE ROWNUM<=6
+ MINUS
+SELECT * FROM EMP WHERE ROWNUM<=5)
+ UNION
+(SELECT * FROM EMP WHERE ROWNUM<=9
+ MINUS
+ SELECT * FROM EMP WHERE ROWNUM<=8);
+or 
+SELECT * FROM EMP WHERE ROWID IN (SELECT MAX(ROWID) FROM EMP WHERE ROWNUM<=6)
+UNION
+SELECT * FROM EMP WHERE ROWID IN (SELECT MAX(ROWID) FROM EMP WHERE ROWNUM<=9);
+- WRITE A STATMENT TO DELETE 5TH RECORD FROM A TABLE
+DELETE FROM EMP where  ROWID IN (SELECT ROWID FROM EMP WHERE ROWNUM<=5
+  MINUS SELECT ROWID FROM EMP WHERE ROWNUM<=4);
+or 
+DELETE FROM (SELECT * FROM EMPS WHERE ROWID IN (SELECT MAX(ROWID) FROM EMPS WHERE ROWNUM<=5));
+
+
+
+- Write a SQL statement to delete only the duplicate records ****************
+ DELETE FROM TEST A WHERE A.ROWID> ANY (SELECT B.ROWID FROM TEST B WHERE A.ID=B.ID AND A.NAME=B.NAME;
+ 
+ 
+Consider a table TEST			
+---------------------
+id 	name
+============
+1	A
+1	A
+2	B
+2	C
+1	A
+2	B
+2	D
+
+create table test 
+(id number,
+ name varchar(10)
+)
+/
+INSERT INTO TEST VALUES (1,'A');
+INSERT INTO TEST VALUES (1,'A');
+INSERT INTO TEST VALUES (2,'B');
+INSERT INTO  TEST VALUES (2,'C');
+INSERT INTO TEST VALUES (1,'A');
+INSERT INTO TEST VALUES (2,'B');
+INSERT INTO TEST VALUES (2,'D');
+
+After deleting the data from TEST table, it should have following records
+-------------------------------------------------------------------------
+id 	name
+============
+1	A	
+2	B	
+2	C	
+2	D	
+
+===================================================================================
+
+
+
+
+
+
+
+

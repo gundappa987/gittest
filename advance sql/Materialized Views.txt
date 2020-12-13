@@ -1,0 +1,182 @@
+Materialized views [Mviews/Mat. views/SNAPSHOTS]
+-----------------------------------------------
+
+-DB object that stores output of a query separately & helps in better performance.
+-MView stores the data permanently.
+-Whenever we execute the same query, the query is not getting executed but the data is fetched directly from the Mview [As a result we will get better performance].
+-We can check the same in Explain plan. 
+-The Mview can refresh itself whenever the base table is modified (DMLs).
+-Mviews should be created for repeated queries based on big tables.
+
+Refresh
+=======
+- Modifing the MV based on the changes to Base Table.
+
+
+
+Intervals of Refresh
+====================
+
+
+(a) MANUAL REFRESH    (REFRESH ON DEMAND) - 
+			- The user should manually refresh the MV whenever reqd.
+			- we use the DBMS_MVIEW package for refresh.
+
+	sql> exec DBMS_MVIEW.REFRESH('test_MV', 'F', '', .......);
+
+
+(B) AUTOMATIC REFRESH (REFRESH ON COMMIT) -
+			- The refresh will happen automatically by Oracle.
+			- Whenever a base table is committed, then MV is refreshed automatically .
+
+
+
+Types of Refresh
+================
+a) COMPLETE (FULL)   	[c]
+b) FAST			[f]
+c) FORCE		[?]
+
+
+sql> exec DBMS_MVIEW.REFRESH('mview1','F',..);
+
+sql> exec DBMS_MVIEW.REFRESH('mview1','?',..);
+
+
+
+Complete (FULL) Refresh: 
+	When the base table is updated, the MV is completely truncated and reloaded with the complete data 
+
+
+
+Fast Refresh: It refreshes only the updated data (incremental update).
+		It uses MV logs to store the updated data
+
+
+
+Force Refresh : It tries to do FAST refresh. If it fails then it performs FULL refresh
+
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+
+
+============================
+a) 
+explain plan 
+for 
+SELECT DEPTNO,SUM(SAL) FROM emp
+GROUP BY DEPTNO;
+=============================
+b)
+select * from table(dbms_xplan.display()); -- path will be from base table
+==================================
+
+c)
+CREATE MATERIALIZED VIEW EMP_MV11
+REFRESH COMPLETE  ON commit  -- REFRESH COMPLETE  ON DEMAND
+ENABLE QUERY REWRITE -->>helps to reuse the MView path rather than base table path.
+AS 
+SELECT DEPTNO,SUM(SAL)
+FROM emp 
+GROUP BY DEPTNO;
+
+===================================
+** repeat a & b -- cost will be lesser (path would be from MView).
+===================================
+** perform some delete or updates on EMP table to check the refresh..
+===================================
+
+
+
+
+To truncate a MV
+================
+SQL> TRUNCATE TABLE EMP_MV11;
+
+To DROP a MV
+================
+SQL> DROP MATERIALIZED VIEW EMP_MV11;
+
+
+NOTES
+=====
+** A table & MV can't have same name.
+** We can't perform DMLs on the MViews directly AS THEY ARE READ-ONLY.
+** MViews are read-only [only TRUNCATE & DROP are allowed]
+** When we use TRUNCATE  & DROP on the base table, the MVs are not refreshed, 
+   but for DELETE it will be refreshed.
+** "user_mviews" stores all the information on MVs.
+** We can create index on the Mat view. 
+create index id11 on emp_mv11(deptno);
+
+
+
+Differences between a view and a MVIEW
+======================================
+
+	VIEW				MVIEW
+	====				=====
+View will not store the data  		Stores data
+
+Improves Security			Improves Performance
+
+If base table is dropped, then we	MV can be accessible
+can't access the View	
+
+We can perform DML operations		We can't perform DML operations
+on a View directly			on a MView (read-only always)
+
+A view can be created before		It cannot be created before the base table
+base table FORCE option	
+
+View can't be indexed directly.		Mview can be indexed.			
+==================================================================================
+
+
+
+NOTE:-
+======
+-  Manual Refresh is preferred over automatic as it provides better performance.
+
+
+
+
+
+--CREATING A MV LOG
+SQL> CREATE MATERIALIZED VIEW LOG ON EMP WITH PRIMARY KEY, ROWID; 
+
+
+
+SCENARIO 1
+==========
+ explain plan for
+ select deptno, sum(sal)
+ from emp
+ where DEPTNO = 20
+ group by deptno;
+   -- MVIEW PATH IS USED
+
+SCENARIO 2
+==========
+ explain plan for
+ select deptno, sum(sal)
+ from emp
+ where job != 'CLERK'
+ group by deptno;
+   -- MVIEW PATH IS NOT USED
+
+NOTE:
+=====
+select mview_name, staleness from user_mviews ;
+
+"staleness" column helps to identify the Mvs which needs refresh (their base tables are modified)..
+if staleness = "STALE" then refresh such mviews only ..
+
+
+
+
+
+
+
+

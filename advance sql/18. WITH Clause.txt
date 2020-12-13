@@ -1,0 +1,53 @@
+WITH Clause
+===========
+- WITH clause creates a Temp. Table for data storage.
+- Temp. table is dropped automatically after the query execution.
+- The Temp. table which is created can be used more than once within a same query (re-usability).
+- This is similar to Inline-view, but WITH clause can be used only once to execute repeated queries.
+
+
+select *
+from (select * from emp order by sal desc) where rownum <= 5 ;
+
+
+with tsal
+as
+(select * 
+from emp
+order by sal desc
+)
+select * 
+from tsal
+where rownum <= 5
+/
+
+================================================================================
+
+select *
+from (select * from emp order by sal desc) where rownum <= 5 
+union all
+select *
+from (select * from emp order by sal desc) where rownum <= 2
+/
+
+
+with tsal
+as
+(select * 
+from emp
+order by sal desc
+)
+select * 
+from tsal
+where rownum <= 5
+union all
+select * 
+from tsal
+where rownum <= 2
+/
+
+===================================================================================
+
+
+Disadvantge:- Syntax is slightly complex.
+

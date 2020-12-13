@@ -1,0 +1,658 @@
+JOINS
+======
+
+* Joins are used to fetch the data from two tables simultaneously.
+* Joins works on cartesian product theory.
+
+ex:-
+====
+Consider 2 sets 
+
+ A = {2,3,4,5}  &  B = {1,6}
+ 
+Here, A*B = {(2,1),(2,6),(3,1),(3,6),(4,1),(4,6),(5,1),(5,6)}
+
+Each and every elements of set 1 will be combined with every elements of set 2.
+
+
+
+From the Database point of view, joins will join each and every record of table1 with each and every record of table2.
+
+
+Types 
+======
+
+1] Cartesian Join [cross join]
+
+2] Inner join[equi-join]
+
+3] Natural join 
+
+
+4] Outer join 
+           -left outer  join/left join
+           -right outer join/right join
+           -full outer  join/full join
+
+5] Self join
+
+6] Non-equi join
+
+
+--------------------------------------
+
+
+
+
+========================================
+1] Cartesian Join[CJ]
+========================================
+
+* it returns the total possible combinations of the records.
+
+* it will not have a join condition.
+
+Eg: Display deptname and emp name?
+
+    sql> select A.ename, B.dname from emp A, dept B;
+
+* A & B are called as Table Alias. 
+* Table Alias provide shorter name for bigger table names & provides better performance.
+
+* CJ returns the incorrect data and also the correct data, WE SHOULD FILTER-OUT THE IN-CORRECT DATA.
+
+* Real time CJ Is not useful as it returns wrong data as well.
+
+* We need to filter the wrong data by adding a condition (join condition)
+
+
+One Scenario where Cartesian join is useful:
+--------------------------------------------
+
+sql> create table t3 as select * from t1, t2;  -->> It helps to create test data quickly
+
+
+========================================
+2] Inner join
+========================================
+
+* It returns the matching records between the tables.
+
+* It will have a join condition which will eliminate incorrect data.
+
+* JOIN condition is must to get correct output.
+
+* We cannot write joins if we don't have a common column.
+
+
+Eg:
+   1] Display deptname and emp name?
+    sql> select a.ename, b.dname from emp a, dept b where A.deptno = B.deptno;
+
+   2] Display empname, dname ,sal only if sal is more than 2000.
+    sql>  select a.ename ,a.sal,b.dname from emp a, dept b where a.sal >2000 and a.deptno=b.deptno ;
+
+
+   3] Display ename ,sal ,job and loc for all the managers working in accounts and research dept.
+    sql>  select a.ename , a.sal ,a.job ,b.dname,b.loc 
+		from emp a, dept b 
+		where a.deptno=b.deptno 
+		and a.job = 'MANAGER' 
+		and b.dname in ( 'ACCOUNTING', 'RESEARCH') ;
+
+
+
+ANSI STYLE JOINS :-
+===================
+
+sql>
+select a.ename ,a.sal, b.dname 
+from emp a, dept b 
+where a.sal >2000 
+and a.deptno=b.deptno ;
+
+sql> SELECT A.ENAME ,B.DNAME ,A.SAL 
+	FROM EMP A JOIN DEPT B  ON (A.DEPTNO = B.DEPTNO)
+  	AND A.SAL > 2000
+/
+
+
+
+INNER JOIN SCENARIOS  :-
+=========================
+
+
+Scenario 1
+==========
+
+  A	      B		 	 C	
+=====	    =====	       =====		
+x y z	    x p q 	       x u v
+
+
+
+O/P => y | p | u
+
+
+  --> A.x=C.x    --> But A.x=B.x=C.x is wrong..
+/		 		
+
+
+
+ANSI Style:
+-----------
+select A.y, B.p, C.u
+from A 	join B On (A.x=B.x)
+	join C on (A.x=C.x)     --> B.X=C.x
+/
+=====================================================================
+
+Scenario 2
+==========
+
+  A		B		c	
+============================================
+x y z	     x	y  p 	       x u v
+
+
+O/P => z | p | u
+
+
+select A.z, B.p, C.u
+from A, B, C
+where A.x = B.x
+AND   A.y = B.y
+And   A.x = C.x  -- B.x = C.x
+/
+
+
+
+select A.z, B.p, C.u
+from A join B on (a.x=b.x and a.y=b.y)
+       join C on (a.x=c.x);
+
+====================================================================
+
+No. of joins 		= no. of common columns  **
+Min. No. of joins 	= no. of tables - 1
+
+=====================================================================
+
+
+Scenario 3
+==========
+  A		  B		  C		  D
+=====	        =====		=====		=====
+x y z		p q r		r s t		u y s
+
+o/p => z | q
+
+
+B=C
+C=D
+D=A
+So, A=>B
+
+select A.z,B.q
+from A,B,C,D
+Where A.y=D.y
+And   C.r=B.r
+ANd   D.s=C.s
+/
+
+
+select A.z,B.q
+from A  join D on (A.y=D.y)
+	join C on (C.s=D.s)
+	join B on (B.r=C.r);
+==================================
+
+
+from A  join D on (A.y=D.y)
+        join B on (B.r=C.r) -> Error.(B can't acces tables below to it)
+	join C on (C.s=D.s);
+
+========================================
+
+
+
+
+
+
+
+========================================
+3] NATURAL JOIN 
+========================================
+* A NATURAL JOIN IS SIMILAR TO AN INNER JOIN BUT JOIN CONDITION IS FORMED BY ORACLE IMPLICITLY.
+
+* IT CAN BE WRITTEN ONLY IN ANSI STYLE.
+
+* FOR NATURAL JOIN, THE COMMON COLUMN NAMES SHOULD BE SAME. OTHERWISE IT RESULTS IN CARTESIAN .
+
+EG : 1] Display deptname and emp name?
+	SQL> SELECT A.ENAME , B.DNAME FROM EMP A NATURAL JOIN DEPT B;
+     
+
+Differences b/w IJ & NJ
+
+	IJ			NJ
+=============================================================
+Common Column names 		Common column names should be same.
+may or may not be same
+
+Join condition is 		We shouldn't give Join condition, it is
+mandatory.			implicitly formed.
+
+written in both ANSI &		Written only in ANSI style.
+normal style
+
+************************************************************************
+
+Scenario 1
+==========
+	A			B
+==================	=================	
+x 	y 	z	x  	y  	q
+
+output => z | q
+
+SELECT A.Z, B.Q 
+ from A natural join B; -- Both x & y are used in the join condition implicitly
+
+[where A.x=B.x
+ AND   A.y=B.y]
+-------------------------
+To use only one common column between the tables we have to use "USING" clause.
+In this case we shouldn't use NATURAL keyword, but just use JOIN keyword.
+SELECT A.z, B.q
+   FROM A JOIN B USING(x);
+
+-- Now only "x" is used in the join condition
+-----------------------
+Scenario 2
+==========
+To use Natural Join between more than 2 tables
+SELECT *
+  FROM   tab1 
+           NATURAL JOIN tab2
+           NATURAL JOIN tab3;
+/
+
+
+
+
+=========================================================
+[4] OUTER JOINS 
+=========================================================
+
+ * OUTER JOIN RETURNS BOTH MATCHING AND NON-MATCHING  RECORDS .
+
+NOTE
+------
+* NON-MATCHING MEANS RECORDS PRESENT ONLY IN ONE TABLE BUT NOT IN OTHER TABLE.
+
+* OUTER JOIN = INNER JOIN + NON MATCHING RECORDS .
+
+* NON-MATCHING CAN BE PRESENT ONLY IN MASTER TABLE.
+
+TYPES
+-------
+* LEFT JOIN  ->   NON-MATCHING FROM LHS TABLE + MATCHING.
+* RIGHT JOIN ->   NON-MATCHING FROM RHS TABLE + MATCHING.
+* FULL JOIN  ->   NON-MATCHING FROM BOTH TABLES + MATCHING.
+
+
+EG: [1] DISPLAY ALL THE DEPTNAMES WHETHER AN EMPLOYEE EXISTS OR NOT. IF AN EMP EXISTS DISPLAY HIS NAME.
+====
+
+Using RIGHT JOIN
+---------------- 
+> SELECT A.DNAME, B.ENAME FROM EMP B  JOIN DEPT A ON (A.DEPTNO=B.DEPTNO);
+
+USING LEFT JOIN 
+---------------
+> SELECT A.DNAME, B.ENAME FROM DEPT A LEFT JOIN EMP B ON (A.DEPTNO=B.DEPTNO);
+
+USING FULL JOIN
+---------------
+> SELECT A.DNAME ,B.ENAME FROM DEPT A FULL JOIN EMP B ON (A.DEPTNO=B.DEPTNO);
+
+
+
+EG: [2] SCENARIOS
+
+     TABLE-A                      TABLE-B      
+------------------------------------------------------
+       6                             9 
+
+                   2 	= 	2
+                   4	!=
+                    	!=	7
+
+-----------------------------------------------------
+
+A CJ B = 6*9 =54
+A IJ B = 2
+A LJ B = 2 + 4 =6
+A RJ B = 2 + 7 =9
+A FJ B = 2 + 4 + 7 =13
+
+
+
+
+
+OUTER JOINS WITHOUT USING ANSI STYLE - (NORMAL STYLE) 
+-----------------------------------------------------
+(+)  -->> OUTER JOIN SYMBOL
+
+* we can use (+) symbol to write  an outer join without using ANSI style.
+
+* we have to place (+) symbol in the opposite side of the table having non matching values.
+
+
+
+select A.ename, B.dname
+from emp A, dept B
+where A.deptno  (+) = B.deptno  --> Right Join
+/
+
+select A.ename, B.dname
+from emp A, dept B
+where B.deptno = A.deptno (+)
+AND A.SAL > 2000  --> Left Join
+/
+
+-----------------------------
+Full Join Restrictions
+======================
+a)
+
+where B.deptno(+) = A.deptno (+) --> Can't use (+) on both sides.
+/
+
+b)
+where B.deptno = A.deptno (+) } --> Can't use (+) symbol in OR operator.
+or    A.deptno = B.deptno (+) }
+/
+==============================
+
+Full Join can be achieved using UNION operator as shown:-
+
+select A.ename, B.dname
+from emp A, dept B
+where A.deptno (+) = B.deptno  --> Right JOin
+union
+select A.ename, B.dname
+from emp A, dept B
+where B.deptno = A.deptno (+)  --> Left Join
+/
+
+
+
+=========================================================
+[5] NON-EQUI JOINS
+=========================================================
+* IT CONTAINS ANY DIFFERENT RELATIONAL  OPERATOR OTHER THAN EQUALS "=" IN THE JOIN CONDITION .
+
+* THIS CAN BE USED EVEN THOUGH IF YOU DONT HAVE A COMMON COLUMN BETWEEN THE TABLES.
+
+* IT SHOULD BE USED CAREFULLY BECAUSE IT MIGHT RESULT IN CARTESIAN PRODUCT[JOIN].
+
+	emp
+	===
+eno 	ename	sal
+===================
+101	scott	2000
+102	ford	5000
+103	miller	9000
+104	john	2000
+105	adams	1000
+
+create table student 
+( 
+ eno number,
+ ename varchar(10),
+ sal number
+)
+/
+INSERT INTO STUDENT VALUES (100, 'scott', 2000);
+INSERT INTO STUDENT VALUES (101, 'ford', 5000);
+INSERT INTO STUDENT VALUES (102, 'miller', 9000);
+INSERT INTO STUDENT VALUES (103, 'john', 2000);
+INSERT INTO STUDENT VALUES (104, 'adams', 1000);
+
+	Tax
+	===
+min_sal		max_sal		tax(percentage)
+===============================================
+0		2500		10
+2501		5500		20
+5501		10000		30
+
+
+create table tax
+( min_sal number,
+  max_sal number,
+ tax number
+)
+/
+insert into tax values (0, 2500, 10);
+insert into tax values (2501, 5500 20);
+insert into tax values (5501, 2500, 10);
+
+
+
+Display the ename & his tax percentage
+
+ename		tax
+===================
+scott		10
+ford		20
+miller		30
+john		10
+adams		10
+
+
+
+select DISTINCT A.emp1, B.tax
+from emp1 A , tax B
+where A.sal between B.min_sal AND B.max_sal -- join condition
+/
+
+
+
+
+=========================================================
+[6] SELF JOIN 
+=========================================================
+* SELF JOIN MEANS JOINING A TABLE TO ITSELF.
+* IT IS SAME AS INNER JOIN BUT THE SAME TABLE IS USED MORE THAN ONCE.
+
+EG:-
+   1)DISPLAY EMP NAME AND THEIR REPORTING MANAGER NAME
+    SQL>  SELECT A.ENAME AS ENAME ,B.ENAME AS MNAME FROM EMP A, EMP B  WHERE A.MGR = B.EMPNO;
+   
+   2)DISPLAY EMP WHO GET SAME SAL
+    SQL>select a.* from emp a,emp b where a.sal=b.sal and a.empno!=b.empno;
+
+
+   3)DISPLAY ENAME,MNAME IF EMPLY DON'T  HAVE MANAGER THEN DISPLAY HIM AS CEO
+    SQL>select a.ename as ename ,nvl(b.ename ,'CEO') as mname from emp a left join emp b on (a.mgr=b.empno)
+   
+   4)LIST THE EMP WHO HAVE JOINED BEFORE THIER REPORTING MANAGER
+    SQL>select a.ename as mn, b.ename as en ,a.hiredate as md,b.hiredate as md
+        from emp a,emp b 
+	where a.mgr=b.empno
+        and a.hiredate < b.hiredate. 
+  
+-------------------------------------------------------------------- 
+
+Assignments
+===========
+
+INNER Join assignments :-
+=========================
+- Difference between join & UNION, explain with an example.
+
+  join is fetch data from two table simuntanously  whereas union is fetch data from two query  and sort the data according to first cloumns of firsr query
+
+- Display empname, dname,sal,job for all the MANAGERs in RESEARCH dept
+  select a.ename, a.sal, a.job, b.dname fromm emp a, dept b where a.deptno= b.deptno and job='MANAGER' AND DNAME='RESEARCH';
+
+
+- Display all the emps from RESEARCH dept.
+  SELECT A.ENAME, B.DNAME FROM EMP A , DEPT B WHERE A.DEPTNO=B.DEPTNO AND DNAME='RESEARCH';
+
+- Display the empname & his dname who is earning the first highest salary
+  SELECT A.ENAME, A.SALB.DNAME FROM EMP A, DEPT B WHERE A.DEPTNO=B.DEPTNO IN 
+(SELECT DEPTNO FROM EMP WHERE SAL IN (SELECT MAX(SAL) FROM EMP));
+   (join+subquery)
+
+- Display the dname & the total sal in each department.(join+grouping
+
+SQL> select a.dname, sum(b.sal) as tsal from dept a, emp b where a.deptno = b.deptno group by a.dname;
+
+DNAME                TSAL
+-------------- ----------
+ACCOUNTING           8750
+RESEARCH            10875
+SALES                9400
+
+
+- Display the MANAGER name from RESEARCH dept who has joined the company first.
+
+  SELECT A.ENAME, MIN(A.HIREDATE), B.DNAME FROM EMP A , DEPT B WHERE A.DEPTNO=B.DEPTNO AND B.DNAME='RESEARCH' AND A.JOB='MANAGER' GROUP BY A.ENAME, B.DNAME;
+
+- Re-write all the assignments using ANSI Style.
+
+- If table "prod" is having 5 records & table "orders" is having no records,
+  then 
+
+	select * from prod, orders;
+
+  will return how many records?
+
+- Consider a table called "prod1" & "prod2"
+
+	prod1
+	=====
+
+	prod_id
+	=======
+	1
+	1
+
+
+	prod2
+	=======	
+	prod_id
+	=======	
+	1
+	1
+	1
+	1
+
+	SELECT *
+	FROM prod1 A, prod2 B
+	WHERE A.prod_id = B.prod_id
+	/
+
+	How many records do we get from the above query?
+
+- Consider a Tables like below
+	test1
+	=====
+	  id
+	=====
+	1 
+ 	1
+	1
+	1
+	2
+	2
+        3
+	3 
+        4
+	4
+	5
+
+	test2
+	=====
+	  id
+	=====
+	1 
+	1
+	2
+	2
+	2
+        3
+	3
+	4
+	5
+	5
+
+
+How many records would you get if you write (A) Cartesian Join (B) Inner Join
+
+
+OUTER Join Assignments :-
+=========================
+
+Consider 2 tables as shown :
+
+PROD
+====
+PID	PNAME
+-------------
+101	CAMERA
+102	CC
+103	LT
+104	DT
+105	IPAD
+
+ORD
+===
+ORDID	PID	
+----------------
+9001	101	
+9002	101
+9003	102	
+9004	105	
+9005	108	
+===========================
+
+a) Write a query to fetch pname & ordid using ANSI style (Left, Right, Full Joins) and analyze the o/p..
+
+
+
+
+SELF Join Assignments :-
+========================
+-List all the emps who have joined before reporting managers.
+ SELECT * FROM EMP A WHERE A.MGR >(SELECT EMPNO FROM EMP B WHERE A. DEPTNO= B.DEPTNO;
+-Display emps who are same salaries as of SCOTT, but SCOTT shouldn't be listed.
+ SELECT * FROM EMP A WHERE  ENAME !='SCOTT' AND SAL IN (SELECT SAL FROM EMP B WHERE ENAME='SCOTT' AND A.SAL=B.SAL);
+  
+-Fetch all the emps earning more than their reporting managers.
+ SELECT * FROM EMP A WHERE A
+
+-Display ename & mname. If an emp don't have manager then display him as NULL
+ select a.ename as ename ,nvl(b.ename ,' ') as mname from emp a left join emp b on (a.mgr=b.empno) 
+
+-List all the emps earning same salaries.
+
+select A.*
+from emp A, emp B
+where A.sal = B.sal
+and   A.empno != B.empno
+/
+
+or
+==
+select *
+from emp
+where sal in 
+	(select sal from emp group by sal having count(*)>1)
+/
+
+-------------------------------------------------------------------- 

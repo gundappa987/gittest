@@ -1,0 +1,217 @@
+
+Inline views
+------------
+* An inline view is a select statement written in the "from" clause.
+
+
+Eg:-
+====
+
+select * from (select * from emp);   -->> INLINE VIEW
+
+
+select *
+from emp where deptno = (select deptno from dept where dname='ACCOUNTS');   -->> SUB-QUERY
+
+
+
+Advantages
+------------
+* it helps to perform top 'n' OR bottom 'n' analysis.
+* It is faster than sub-queries & joins.
+
+
+EXAMPLES:-
+==========
+
+to display top 5 salaries 
+-------------------------
+
+ select * from ( select * from emp order by SAL DESC ) where rownum <=5;
+
+
+to display BOTTOM 5 salaries 
+----------------------------
+
+ select * from ( select * from emp order by SAL ASC) where rownum <=5;
+
+
+to display bottom 5 records 
+---------------------------
+       SELECT * FROM (SELECT * FROM EMP ORDER BY ROWID DESC)
+       WHERE ROWNUM<=5;
+
+to display TOPMOST 5 records 
+---------------------------
+       SELECT * FROM (SELECT * FROM EMP ORDER BY ROWID ASC)
+       WHERE ROWNUM<=5;
+
+       SELECT * FROM EMP  WHERE ROWNUM<=5;
+
+ASSIGNMENTS
+===========
+- Display the bottom 5 salaries
+   SQL> SELECT * FROM (SELECT * FROM EMP ORDER BY SAL ASC) WHERE ROWNUM<=5;
+
+     EMPNO ENAME      JOB              MGR HIREDATE         SAL       COMM     DEPTNO
+---------- ---------- --------- ---------- --------- ---------- ---------- ----------
+      7369 SMITH      CLERK           7902 17-DEC-80        800                    20
+      7900 JAMES      CLERK           7698 03-DEC-81        950                    30
+      7876 ADAMS      CLERK           7788 23-MAY-87       1100                    20
+      7521 WARD       SALESMAN        7698 22-FEB-81       1250        500         30
+      7654 MARTIN     SALESMAN        7698 28-SEP-81       1250       1400         30
+SQL> select * from (select a.* , rank() over(order by sal desc) as ranks from emp a ) where ranks<=5;
+
+     EMPNO ENAME      JOB              MGR HIREDATE         SAL       COMM     DEPTNO      RANKS
+---------- ---------- --------- ---------- --------- ---------- ---------- ---------- ----------
+      7839 KING       PRESIDENT            17-NOV-81       7500                    10          1
+      7566 JONES      MANAGER         7839 02-APR-81       5355                    20          2
+      7698 BLAKE      MANAGER         7839 01-MAY-81       5130                    30          3
+      7902 FORD       ANALYST         7566 03-DEC-81       4500                    20          4
+      7788 SCOTT      ANALYST         7566 19-APR-87       4500          0         20          4
+
+SQL>
+
+SQL>
+- Display the employee details who have joined the company first
+ SQL> SELECT * FROM (SELECT * FROM EMP ORDER BY HIREDATE DESC) ;
+
+     EMPNO ENAME      JOB              MGR HIREDATE         SAL       COMM     DEPTNO
+---------- ---------- --------- ---------- --------- ---------- ---------- ----------
+      7876 ADAMS      CLERK           7788 23-MAY-87       1100                    20
+      7788 SCOTT      ANALYST         7566 19-APR-87       3000                    20
+      7934 MILLER     CLERK           7782 23-JAN-82       1300                    10
+      7902 FORD       ANALYST         7566 03-DEC-81       3000                    20
+      7900 JAMES      CLERK           7698 03-DEC-81        950                    30
+      7839 KING       PRESIDENT            17-NOV-81       5000                    10
+      7654 MARTIN     SALESMAN        7698 28-SEP-81       1250       1400         30
+      7844 TURNER     SALESMAN        7698 08-SEP-81       1500          0         30
+      7782 CLARK      MANAGER         7839 09-JUN-81       2450                    10
+      7698 BLAKE      MANAGER         7839 01-MAY-81       2850                    30
+      7566 JONES      MANAGER         7839 02-APR-81       2975                    20
+      7521 WARD       SALESMAN        7698 22-FEB-81       1250        500         30
+      7499 ALLEN      SALESMAN        7698 20-FEB-81       1600        300         30
+      7369 SMITH      CLERK           7902 17-DEC-80        800                    20
+
+14 rows selected.
+
+- Display the recent 5 employees details who have joined the company
+  SQL> SELECT * FROM (SELECT * FROM EMP ORDER BY HIREDATE ASC) WHERE ROWNUM<=5;
+
+     EMPNO ENAME      JOB              MGR HIREDATE         SAL       COMM     DEPTNO
+---------- ---------- --------- ---------- --------- ---------- ---------- ----------
+      7369 SMITH      CLERK           7902 17-DEC-80        800                    20
+      7499 ALLEN      SALESMAN        7698 20-FEB-81       1600        300         30
+      7521 WARD       SALESMAN        7698 22-FEB-81       1250        500         30
+      7566 JONES      MANAGER         7839 02-APR-81       2975                    20
+      7698 BLAKE      MANAGER         7839 01-MAY-81       2850                    30
+
+- Display the employees who are earning least salary in their respective jobs.
+ SQL> SELECT * FROM (SELECT MIN(SAL), JOB FROM EMP GROUP BY JOB );
+
+  MIN(SAL) JOB
+---------- ---------
+       800 CLERK
+      1250 SALESMAN
+      3000 ANALYST
+      5000 PRESIDENT
+      2450 MANAGER
+      3000 ANALYST
+
+6 rows selected.
+
+
+- Display top 2 employees who are getting the highest commission
+ SQL>  SELECT * FROM (SELECT * FROM EMP ORDER BY SAL DESC) WHERE ROWNUM<=2;
+
+     EMPNO ENAME      JOB              MGR HIREDATE         SAL       COMM     DEPTNO
+---------- ---------- --------- ---------- --------- ---------- ---------- ----------
+      7839 KING       PRESIDENT            17-NOV-81       5000                    10
+      7788 SCOTT      ANALYST         7566 19-APR-87       3000                    20
+
+
+- Display the last 5 records using inline views & ROWID.
+  SQL> SELECT * FROM (SELECT * FROM EMP ORDER BY ROWID DESC) WHERE ROWNUM<=5;
+
+     EMPNO ENAME      JOB              MGR HIREDATE         SAL       COMM     DEPTNO
+---------- ---------- --------- ---------- --------- ---------- ---------- ----------
+      7934 MILLER     CLERK           7782 23-JAN-82       1300                    10
+      7902 FORD       ANALYST         7566 03-DEC-81       3000                    20
+      7900 JAMES      CLERK           7698 03-DEC-81        950                    30
+      7876 ADAMS      CLERK           7788 23-MAY-87       1100                    20
+      7844 TURNER     SALESMAN        7698 08-SEP-81       1500          0         30
+or
+ SQL> select * from emp minus (select * from emp where rownum<=(select count(*)-5 from emp));
+
+     EMPNO ENAME      JOB              MGR HIREDATE         SAL       COMM     DEPTNO
+---------- ---------- --------- ---------- --------- ---------- ---------- ----------
+      7788 SCOTT      ANALYST         7566 19-APR-87       3000          0         20
+      7876 ADAMS      CLERK           7788 23-MAY-87       1100                    20
+      7900 JAMES      CLERK           7698 03-DEC-81        950                    30
+      7902 FORD       ANALYST         7566 03-DEC-81       3000                    20
+      7934 MILLER     CLERK           7782 23-JAN-82       1300                    10
+
+- Display alternate records from the table 
+  (ROWID, ROWNUM, MOD function with INLINE VIEWS)
+
+select * from (select a.* rownum rn from emp a ) where mod (rn, 2)!=0;
+OR
+SQL> select * from (select ename, rownum as rn from emp ) where mod(rn,2)!=0;
+   
+
+ENAME              RN
+---------- ----------
+SMITH               1
+WARD                3
+MARTIN              5
+CLARK               7
+TURNER              9
+JAMES              11
+MILLER             13
+
+7 rows selected.
+
+ 
+
+=================================================================================
+
+
+-- to get TOP 'n' records
+
+TOP function   (SQL SERVER & mysql)
+===================================
+select top 5 *
+from emp
+order by sal desc;
+
+
+
+
+12C FEATURES:
+=============
+A] Fetch first N rows only / OFFSET N ROWS fetch NEXT N rows only 
+
+B] FETCH FIRST N PERCENT ROWS ONLY
+
+
+EXAMPLES [TOP 5 EARNERS] ..
+===================================
+select *
+from emp
+order by sal desc
+fetch first 5 rows only;
+
+
+select * 
+from emp 
+order by sal desc
+offset 5 rows 
+fetch next 5 rows only;
+
+
+select * 
+from emp 
+order by ename 
+FETCH FIRST 5 PERCENT ROWS ONLY;
+
+

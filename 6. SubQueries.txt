@@ -1,0 +1,301 @@
+	SUB-QUERIES
+	===========
+
+* Sub-query means query within a query
+* It is also called as nested query 
+
+
+Synatx:-
+========
+select 	-------
+from 	-------
+where	-------
+          (
+		select 	---------------
+           	from	---------------
+		where	---------------
+          )
+/
+
+
+- Here the output of inner query is passed as input to the outer query.
+- To write Sub-query we should have a common column between the tables.
+- The common column should have same data type but it can have different name.
+- The result to be displayed on the screen should be written as the outer query.
+
+
+
+Eg:-
+[1] display the emps from accounting dept.
+ sql> select * from emp where deptno = (select deptno from dept where dname='ACCOUNTING' );
+
+[2] display dname of 'BLAKE'.
+ sql> select dname from dept where deptno = (select deptno from emp where ename ='BLAKE');
+
+[3]DISPLAY ALL THE PERSONS LIVING IN NEWYORK
+  sql> select * from emp where deptno =   (select deptno from dept where loc='NEWYORK');
+
+[4]DISPLAY THE EMPLOYEES WORKING IN ACCOUNTING AND RESEARCH DEPT.
+  sql>  select * from emp where deptno IN (select deptno from dept where dname IN ('ACCOUNTING', 'RESEARCH'));
+
+[5] DISPLAY THE EMP WHO HAS JOINED FIRST.
+  sql> SELECT * FROM EMP WHERE HIREDATE = (SELECT MIN(HIREDATE) FROM EMP);
+
+[6] LIST THE ENAME WHO IS GETTING FIRST HIGHEST SALARY.
+   sql> SELECT * FROM EMP WHERE SAL=(SELECT MAX(SAL) FROM EMP);		
+
+[7] DISPLAY THE DNAME WHICH IS GETTING HIGHEST SALARY.
+   sql> SELECT *  
+	FROM DEPT 
+	WHERE DEPTNO =
+       		(SELECT DEPTNO 
+		 FROM EMP 
+		 WHERE SAL =     
+		   (SELECT MAX(SAL) FROM EMP)
+		);
+
+[8] DISPLAY THER SECOND HIGHEST SALARY.
+  sql> SELECT MAX(SAL) 
+	FROM EMP 
+	WHERE SAL < 
+    		(SELECT MAX(SAL) 
+		 FROM EMP
+		);
+
+
+[9] DISPLAY FOR FOURTH HIGHEST SALARIES
+   >  SELECT MAX(SAL) FROM EMP WHERE SAL < 
+       ( SELECT MAX(SAL) FROM EMP WHERE SAL <
+       ( SELECT MAX(SAL) FROM EMP WHERE SAL <
+        (  SELECT MAX(SAL) FROM EMP )));
+
+[10] LIST THE EMP REPORTING TO BLAKE.
+  SQL>  SELECT * 
+	FROM EMP 
+	WHERE MGR=
+		(SELECT EMPNO 
+		FROM EMP 
+		WHERE ENAME ='BLAKE');
+
+[11] DISPLAY THE EMPS WHO DO NOT HAVE ANY REPORTING MANAGERS.
+  SQL> SELECT * 
+	FROM EMP 
+	WHERE MGR NOT IN 
+      		(SELECT EMPNO 
+			FROM EMP 
+			WHERE MGR  IS NOT NULL);
+
+
+=============================================================================
+
+PAIRED COLUMNS
+==============
+SELECT 	------
+FROM	--------- 
+WHERE(COL1,COL2) IN 
+	(SELECT COL4,COL5 
+	 FROM ------):
+
+Oracle will understand as  "WHERE COL1=COL4 AND COL2=COL5"
+
+
+EG:-
+====
+Display emps earning highest salary in their respective depts.
+
+select *
+from emp
+where (deptno, sal) IN (select deptno, max(sal)
+			from emp
+			group by deptno
+		       )
+/
+
+=============================================================================
+
+
+LIMITATIONS OF SUBQUERIES :- 
+============================
+* ONLY UPTO 256 LEVEL OF SUBQUERIES IS POSSIBLE.
+* THE ORDER BY CLAUSE SHOULD NOT BE USED IN INNER QUERIES (SHOULD BE USED IN THE OUTERMOST QUERY).
+* WE CANNOT FETCH THE DATA FROM TWO TABLES SIMULTANEOUSLY. THIS CAN BE OVERCOME BY USING JOINS.
+
+
+
+ASSIGNMENTS
+===========
+Select all the employees who work in DALLAS. 
+1* select * from emp where deptno = (SELECT deptno from dept where loc='DALLAS')
+SQL> /
+
+     EMPNO ENAME      JOB              MGR HIREDATE         SAL       COMM     DEPTNO
+---------- ---------- --------- ---------- --------- ---------- ---------- ----------
+      7369 SMITH      CLERK           7902 17-DEC-80        800                    20
+      7566 JONES      MANAGER         7839 02-APR-81       2975                    20
+      7788 SCOTT      ANALYST         7566 19-APR-87       3000                    20
+      7876 ADAMS      CLERK           7788 23-MAY-87       1100                    20
+      7902 FORD       ANALYST         7566 03-DEC-81       3000                    20
+
+
+Select all the departmental information for all the managers
+  SELECT FROM EMP WHERE JOB='MANAGER';
+ 
+list  the salesmen who are not located at DALLAS.
+
+select * from emp where JOB='SALESMAN' AND deptno in (select deptno from dept where loc!='DALLAS');
+ 
+list  the managers & clerks who work in Accounts and SALES departments.
+
+SQL> SELECT * FROM EMP WHERE JOB='MANAGER' OR JOB='CLERK' AND DEPTNO IN (SELECT DEPTNO FROM DEPT WHERE DNAME IN ('ACCOUNTING' , 'SALES'));
+
+     EMPNO ENAME      JOB              MGR HIREDATE         SAL       COMM     DEPTNO
+---------- ---------- --------- ---------- --------- ---------- ---------- ----------
+      7566 JONES      MANAGER         7839 02-APR-81       2975                    20
+      7698 BLAKE      MANAGER         7839 01-MAY-81       2850                    30
+      7782 CLARK      MANAGER         7839 09-JUN-81       2450                    10
+      7900 JAMES      CLERK           7698 03-DEC-81        950                    30
+      7934 MILLER     CLERK           7782 23-JAN-82       1300                    10
+
+list  employees who are earning same as SCOTT. But SCOTT should not be displayed.
+SELECT * FROM EMP WHERE SAL = (SELECT * FROM EMP WHERE ENAME='SCOTT AND ENAME<>'SCOTT');
+
+list  the employees who are earning more than the average salaries of all the employees.
+
+ SELECT * FROM EMP WHERE SAL>(SELECT AVG(SAL) FROM EMP );
+
+list the employee name from ACCTS & SALES departments.
+
+SELECT * FROM EMP WHERE DEPTNO IN (SELECT DEPTNO FROM DEPT WHERE DNAME IN ('ACCOUNTING', 'SALES'));
+
+list the dept name which is having no employees (Use NOT IN)
+ SELECT DNAME FROM DEPT WHERE  DEPTNO NOT IN (SELECT DEPTNO FROM EMP );
+
+list the dept name which is having atleast one employee. (Use IN)
+SELECT DAME FROM DEPT WHERE DEPTNO IN (SELECT DEPTNO FROM EMP GROUP BY DEPTNO HAVING COUNT(*)>1);
+
+list the employee name who is earning the first max salary.
+ SELECT * FROM EMP WHERE SAL IN (SELECT MAX(SAL) FROM EMP);
+ 
+list the department name is who is earning the first max salary.
+SELECT DNAME FROM DEPT WHERE DEPTNO IN (SELECT DEPTNO FROM EMP WHERE SAL IN (SELECT MAX(SAL) FROM EMP)); 
+
+list 2nd least Salary.
+SELECT * FROM EMP WHERE SAL( SELECT MIN(SAL) FROM EMP WHERE SAL >(SALECT MIN(SAL) FROM EMP));
+
+list top 2 salaries. (TOP1 UNION TOP2)
+SQL> select * from emp where sal IN (select max(sal) from emp)
+  2  union
+  3  select * from emp where sal in (select max(sal) from emp where sal<(select max(sal) from emp))
+
+     EMPNO ENAME      JOB              MGR HIREDATE         SAL       COMM     DEPTNO
+---------- ---------- --------- ---------- --------- ---------- ---------- ----------
+      7788 SCOTT      ANALYST         7566 19-APR-87       3000          0         20
+      7839 KING       PRESIDENT            17-NOV-81       5000                    10
+      7902 FORD       ANALYST         7566 03-DEC-81       3000                    20
+or
+SQL> select * from (select a.*, dense_rank()  over(order by sal desc) as rank from emp a ) where rank<=2;
+
+     EMPNO ENAME      JOB              MGR HIREDATE         SAL       COMM     DEPTNO       RANK
+---------- ---------- --------- ---------- --------- ---------- ---------- ---------- ----------
+      7839 KING       PRESIDENT            17-NOV-81       7500                    10          1
+      7566 JONES      MANAGER         7839 02-APR-81       5355                    20          2
+
+
+list  the fourth maximum salary.
+
+    select * from emp where sal in (SELECT MAX(SAL) FROM EMP
+    WHERE SAL < (SELECT MAX(SAL) FROM EMP where sal<(select max(sal) from emp where sal <(select max(sal) from emp ))));
+     EMPNO ENAME      JOB              MGR HIREDATE         SAL       COMM     DEPTNO
+---------- ---------- --------- ---------- --------- ---------- ---------- ----------
+      7902 FORD       ANALYST         7566 03-DEC-81       4500                    20
+      7788 SCOTT      ANALYST         7566 19-APR-87       4500          0         20  
+or
+ select * from emp a where 3=(select count(distinct(b.sal)) from emp b where a.sal <b.sal);
+     EMPNO ENAME      JOB              MGR HIREDATE         SAL       COMM     DEPTNO
+---------- ---------- --------- ---------- --------- ---------- ---------- ----------
+      7902 FORD       ANALYST         7566 03-DEC-81       4500                    20
+      7788 SCOTT      ANALYST         7566 19-APR-87       4500          0         20
+or 
+SQL> select * from (select a.*, rank() over(order by sal desc) as rn from emp a ) where rn=4;
+
+     EMPNO ENAME      JOB              MGR HIREDATE         SAL       COMM     DEPTNO         RN
+---------- ---------- --------- ---------- --------- ---------- ---------- ---------- ----------
+      7902 FORD       ANALYST         7566 03-DEC-81       4500                    20          4
+      7788 SCOTT      ANALYST         7566 19-APR-87       4500          0         20          4
+
+
+
+list the employee name who has joined the company first. -- MIN(HIREDATE)
+SQL>  select * from emp a where 0 = (select count(distinct(b.hiredate)) from emp b where a.hiredate >b.hiredate)
+  2  /
+
+     EMPNO ENAME      JOB              MGR HIREDATE         SAL       COMM     DEPTNO
+---------- ---------- --------- ---------- --------- ---------- ---------- ----------
+      7369 SMITH      CLERK           7902 17-DEC-80        920                    20
+or
+
+SQL> SELECT * FROM EMP WHERE HIREDATE IN (SELECT MIN(HIREDATE) FROM EMP);
+
+     EMPNO ENAME      JOB              MGR HIREDATE         SAL       COMM     DEPTNO
+---------- ---------- --------- ---------- --------- ---------- ---------- ----------
+      7369 SMITH      CLERK           7902 17-DEC-80        920                    20
+or
+SQL> select * from (select a.*, rank() over(order by hiredate ) as rn from emp a ) where rn=1;
+
+     EMPNO ENAME      JOB              MGR HIREDATE         SAL       COMM     DEPTNO         RN
+---------- ---------- --------- ---------- --------- ---------- ---------- ---------- ----------
+      7369 SMITH      CLERK           7902 17-DEC-80        920                    20          1
+
+
+list the department name which has made the most recent hiring.
+SQL> SELECT DNAME FROM DEPT WHERE DEPTNO IN (SELECT DEPTNO FROM EMP  WHERE HIREDATE IN (SELECT MAX(HIREDATE) FROM EMP));
+
+DNAME
+--------------
+RESEARCH
+or
+
+SQL> select * from (select a.dname, b.hiredate , rank() over(order by hiredate desc ) as rnk from dept a, emp b  where a.deptno=b.deptno) where rnk=1
+  2  /
+
+DNAME          HIREDATE         RNK
+-------------- --------- ----------
+RESEARCH       23-MAY-87          1
+
+list  the CLERKs & MANAGERs who are located in "NEW YORK" and reporting to KING.
+  SELECT A.JOB, A.ENAME, A.MGR , B.LOC  FROM EMP A , DEPT B  WHERE A.JOB IN ('CLERK', 'MANAGER' )  AND A.DEPTNO=B.DEPTNO AND A.MGR IN (SELECT A.EMPNO FROM EMP A WHERE A.ENAME='KING')
+
+JOB       ENAME             MGR LOC
+--------- ---------- ---------- -------------
+MANAGER   JONES            7839 DALLAS
+MANAGER   BLAKE            7839 CHICAGO
+MANAGER   CLARK            7839 NEW YORK
+
+
+list  the managers & clerks who work in Accounts and SALES departments.
+SELECT * FROM EMP WHERE JOB IN ('MANAGER', 'CLERK') AND DEPTNO IN (SELECT DEPTNO FROM DEPT LOC IN ('ACCOUNTING', 'SALES');
+ 
+
+list employees who are earning same as SMITH. But SMITH should not be display
+
+list emps who are earning more than all the MANAGERs.
+SELECT * FROM EMP WHERE SAL IN (SELECT MAX(SAL) FROM EMP WHERE JOB='MANAGER');
+
+list employee number, job & salaries of all the Analysts who are earning more than any of the managers.
+ 
+
+
+list the mgr name of FORD
+ SELECT * FROM EMP WHERE MGR IN (SELECT EMPNO FROM EMP WHERE ENAME='FORD');
+list the mgr name who is having atleast 2 employees under him (reporting to him).
+ select * from emp where mgr in(select empno from emp where empno>2;
+
+list the employees who don’t have any reportee under them.
+select * from emp where empno not in (select mgr from emp);
+
+
+list the employees who are earning the minimum salary in each of their job. (paired columns)
+select min(sal), job from emp group by job;
+
+
+   

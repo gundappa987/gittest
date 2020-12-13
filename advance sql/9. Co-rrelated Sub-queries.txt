@@ -1,0 +1,231 @@
+ 	co-related sub-queries
+----------------------
+* it is a special type of subquery that works like both subquery and join.
+
+* if we access an outer query column in the inner query then it is called as correlated subquery.
+
+* Helps to fetch nth high / nth low value.
+
+
+Eg:- Display first highest salary
+---------------------------------
+sql> 
+  select * 
+  from emp A 
+  where 0 = (
+		select count (distinct (b.sal)) 
+		from emp b 
+  		where A.sal < B.sal
+	    );
+
+
+  'n'th -> '(n-1)'th
+
+
+Differences b/n subquery and correlated
+---------------------------------------
+
+SUBQUERY                                       CORRELATED
+
+1)just works like a                        1)works like subquery and join.
+ normal subquery.
+
+
+2)In subquery outer depends                2)both are depended on each other.   
+on inner but inner never depends on 
+outer
+
+3)outer query column is never accessed    3)outer query column is accessed inside 
+inside a inner query.                 	    the inner query.
+
+
+===========================================================
+1.Display second least sal
+SQL> select * from emp a where 1 =
+     (select count(distinct(b.sal)) from emp b where a.sal>b.sal)
+/
+
+
+(
+
+highest (max) 	<
+least   (min) 	> 
+
+)
+
+
+
+2.display top 3 sal
+SQL>  select * from emp a where 2 >=
+     (select count(distinct(b.sal)) from emp b where a.sal>b.sal)
+/
+
+3.Display the employee who joined company first.
+SQL>select * from emp a where 1 =
+     (select count(distinct(b.hiredate)) from emp b where a.hiredate>b.hiredate)
+/
+
+4.display the 2nd highest comm
+sql> select * from emp a where 1 =
+     (select count(distinct(b.comm)) from emp b where a.comm>b.comm and a.comm is not null)
+/
+
+5.display the 1st record from table 
+sql> select * from emp a where 0 = (select count (distinct(b.rowid)) from emp b where a.rowid>b.rowid); 
+/
+
+
+Eg:-
+====
+
+stid		totalmarks	with DIST	without DIST
+============================================================		
+101		599		1		1	
+102		597		2		2
+104		597		2		2
+105		596		3		4
+
+note
+-----
+* in case of a tie, "without distinct" would miss the next nth value / next rank where as 
+  "with distinct" will not miss the next value.
+
+* if you use with distinct you will get top 'n' salaries and if we don't use distinct then we get top 'n'earners.
+
+
+
+EXISTS and NOT EXISTS :-
+========================
+- Both are boolean operators (Returns TRUE / FALSE)
+- EXISTS will return TRUE if matching row is found, else it returns FALSE
+- NOT EXISTS will return TRUE if matching row is not found, else it returns FALSE
+- EXISTS is similar to IN and NOT EXISTS is similar to NOT IN
+- EXISTS is faster than IN (becuase it uses semi-join) 
+- NOT EXISTS is faster than NOT IN (because it uses anti-join)
+- EXISTS & NOT EXISTS can be used in Co-related subquery.
+
+
+
+--Display all the depts that are having employees.
+select *
+from  dept
+where deptno in (select deptno from emp);
+
+Or
+==
+
+select *
+from  dept A
+where EXISTS (Select 1 from emp B where A.deptno=B.deptno);
+
+--where EXISTS (Select 'x' from emp B where A.deptno=B.deptno);
+
+
+===============================================================
+--Display all the depts that are having no employees.
+select *
+from dept
+where deptno not in (select deptno from emp);
+--Returns FALSE if the inner query is having atleast one NULL.
+
+Or
+==
+
+select *
+from dept A
+where NOT EXISTS (Select deptno from emp B where A.deptno=B.deptno);
+--Returns TRUE even if the inner query is having NULLs.
+
+
+
+Assignment
+==========
+
+prod
+====
+pid	pname
+1	x
+2	y
+
+create table prod1
+(pid number primary key,
+ pname varchar(10)
+)
+/
+insert into prod1 values (1, 'A');
+insert into prod1 values (2, 'B');
+insert into prod1 values (3, 'C');
+insert into prod1 values (4, 'D');
+insert into prod1 values (5, 'E');
+
+orders
+
+======
+pid	ordid
+1	1001
+1	1002
+
+CREATE TABLE ORDERS1
+( pid NUMBER REFERENCES prod1(pid),
+  ORDID NUMBER PRIMARY KEY
+)
+/
+
+insert into orders1 values (1, 1001);
+insert into orders1 values (1, 1002);
+insert into orders1 values (3, 1003);
+insert into orders1 values (4, 1004);
+insert into orders1 values (1, 1005);
+
+display the product which is not ordered? [Non-matching data]
+	a) NOT IN
+ select * from prod1 where not in (select pid from orders1);
+ 
+	b) NOT EXISTS
+select * from prod1 a where not exists (select 1 from orders1 b where a.pid=b.pid);
+	c) MINUS
+select pid from prod1 minus(select pid from orders1);
+ SQL>  select a.pid, a.pname, b.pid from prod1 a LEFT join orders1 b ON a.pid=b.pid
+  2  minus
+  3  select a.pid, a.pname, b.pid from prod1 a right join orders1 b ON a.pid=b.pid;
+
+       PID PNAME             PID
+---------- ---------- ----------
+         2 B
+         5 E
+
+display the product which are ordered? [matching data]
+	a) IN
+ select * from prod1 where pid in (select pid from orders1);
+	b) EXISTS
+ select * from prod1 a where exists (select * from orders1 b where a.pid=b.pid);
+	c) INTERSECT
+ select pid from prod1 intersect (select pid from  orders1);
+	d) INNER JOIN
+ select a.pid, b.pid from prod1 a, orders1 b where a.pid=b.pid;	
+
+Which is the best among them?
+using the inline view query is faster than all query ;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 

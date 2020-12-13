@@ -1,0 +1,86 @@
+
+			==========
+			DB LINKS
+			==========
+
+
+* It is a database object which helps to connect to remote database (another database).
+* It is a one-way communication channel.
+
+--------------------------
+advantages
+-------
+- It helps to access the database objects present in two different users which are present in two 
+different databases within a SAME SERVER.
+
+- It helps to access the database objects present in two different users which are present in
+ two different databases within a DIFFERENT SERVERS. (Use IP Address in the syntax)
+
+----------------------
+
+
+Database link Connects from FORD to SCOTT			
+==========================================
+-- from "ford"  
+-- creating DB link from a user present in different DB in same server
+CREATE DATABASE LINK scott_link 
+CONNECT TO scott IDENTIFIED BY tiger USING 'orcl'
+/
+
+--from "ford"
+select * from emp@scott_link;
+
+--from "ford"
+insert into emp@scott_link values(.......);  
+
+@ -> remote descriptor (DB link operator)
+
+------------------------
+select .....
+from dept A, emp@scott_link  B
+..
+------------------------
+
+-- creating DB link from a user present in the different DB in a different server
+CREATE PUBLIC DATABASE LINK prod_link
+CONNECT TO blake IDENTIFIED BY password_blake
+USING '176.999.00.10:orcl';
+
+
+
+Restrictions/Disadvantages of DB link
+===============================================
+-Can't perform DDL operations over DB link
+-Can't access  LOB columns over DB link
+===============================================
+
+Types:-
+=======
+
+Private DB link : Accessible by owner only, it is default.
+Public  DB link : Accessible by all users in the database.. [PUBLIC] 
+
+
+-- Syntax for Public DB links..
+CREATE PUBLIC DATABASE LINK scott_link 
+CONNECT TO scott IDENTIFIED BY tiger USING 'orcl'
+/
+
+
+user_db_links --> to see the DB links information (private)
+all_db_links  --> to see the DB links information (private & public)
+
+============================
+
+
+DB link = connection string = uname/password@DBname
+
+============================
+
+
+
+
+
+
+
+ 

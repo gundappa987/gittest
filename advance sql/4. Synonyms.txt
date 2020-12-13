@@ -1,0 +1,118 @@
+
+		========
+	 	SYNONYMS
+		========
+
+
+
+-A synonym  is data base object which provides alternate name for db object.
+-A Synonym  provides a short name for bigger database objects name. 
+-A SYNONYM  is always at the object level
+-A Synonym is like a permanent alias name
+
+
+sql> create or replace synonym s1 for emp
+/
+
+
+select *  from s1
+/
+
+
+Advantages:
+===========
+- To provide shorter name for the bigger DB object name for easier reference.
+- To share an object to all the users easily through public synonym.
+- Synonyms will not occupy any space so no memory consumption.
+- Protects the base object [dropping a synonym will not drop the base object]
+- Synonyms can be created for table/view/syn/SP/Function/Packages/Triggers as well.
+
+Types:
+======
+
+a) Private Synonyms : default one; it can be accessible only by user/owner who created it.
+
+sql> create synonym s1 for emp;  -- "s1" is private synonym..
+
+
+b) Public  Synonyms : 	- all the users of the database can use this ..
+		 	- To create public synonym we should have 
+			  "CREATE PUBLIC SYNONYM" privilege.
+			- Helps for sharing an object to all the users within a DB.
+
+from scott
+==========
+sql> create or replace public synonym s5 for dept;
+<<if you get in-sufficient privileges>>
+
+[[
+
+sql> conn / as sysdba    ------------>> CONNECTS AS SYSTEM ADMIN 
+
+sql> grant create public synonym to scott;
+
+]]
+
+sql> create or replace public synonym s5 for dept;
+
+sql> grant SELECT on s5 to PUBLIC;  --> PUBLIC is a keyword which means all the users.
+
+sql> SELECT * FROM S5; 		 -->> from any user it works
+
+
+** Only PUBLIC SYNONYMS can be granted to PUBLIC user
+
+================================================================================
+Note:
+-----
+
+sql> drop synonym s1;
+
+sql> drop public synonym s2;
+
+sql> rename syn1 to syn2;
+
+Note:
+---------------------------------------------
+** table & a public synonym can have a same name
+** table & a private synonym can't have a same name
+==============================================
+
+user_synonyms -> contains the list of private synonyms
+all_synonyms  -> contains the list of private & public synonyms
+
+SELECT SYNONYM_NAME, TABLE_NAME FROM USER_SYNONYMS;
+
+
+
+Differences Between View & a Synonym
+
+================================================================================
+	view					synonyms
+=================================================================================
+
+a) At row level/column level/table level	a) Only at the Object level
+ 
+b) Only for Tables/views/syns	                b) for table/view/syn/SP/functions/packages
+
+c) Views could be created on multiple tables	c) Only on one table
+
+create view v1
+as
+select A.ename,B.dname
+from emp A, dept B
+where A.deptno = B.deptno;
+
+
+d) Views can be updateable 			d) Are always updateable
+or non-updateable
+
+
+e) Always PRIVATE				e) Can be private or public.
+
+================================================================================
+================================================================================
+
+
+
+

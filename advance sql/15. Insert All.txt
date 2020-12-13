@@ -1,0 +1,38 @@
+================================
+INSERT ALL [MUTLI-TABLE INSERT]
+================================
+
+-It is a DML Statement.
+-Insert all helps to insert into more than one table at a time.
+-It is called as Multi-table insert.
+
+Eg:-
+====
+create table t3 (empno number, sal number);
+
+create table t4 (empno number);
+
+insert into T3
+select empno, sal
+from emp
+/
+
+
+insert into T2
+select sal
+from emp
+/
+
+
+
+SYNTAX FOR INSERT ALL:
+----------------------
+INSERT ALL
+ INTO t3 VALUES(empno, sal)
+ INTO t4 VALUES(sal)
+select empno,sal
+from emp
+/
+
+
+

@@ -1,0 +1,409 @@
+METHODS OF IMPLEMENTING IF-THEN-ELSE STATEMENT
+==============================================
+A) DECODE FUNCTION
+B) CASE STATEMENT
+
+
+
+DECODE FUNCTION
+---------------
+ * It is an in-built function which works like a IF-THEN-ELSE statement.
+
+
+Eg 1:-
+======
+select 	ename, 
+	JOB, 
+	decode(job, 'SALESMAN','SM', 'MANAGER','M','OTHERS') AS ST, SAL
+FROM EMP;
+
+How it works :-
+================
+if job = 'SALESMAN' then  'SM'
+if job = 'MANAGER'  then  'M'
+else
+ 'OTHERS'
+
+
+
+
+Eg 2:-
+======
+select 	ename, 
+	JOB, 
+	decode(job, 'SALESMAN','SM', 'MANAGER','M') AS ST, SAL
+FROM EMP;
+
+
+
+
+=====
+CASE
+=====
+
+- SIMILAR TO SWITCH CASE STATEMENT
+- Flexible than DECODE function
+
+
+
+Eg 1:-
+======
+select 	ename, JOB, 
+	CASE JOB
+		WHEN 'SALESMAN' THEN 'SM'
+		WHEN 'MANAGER'  THEN 'M'
+		ELSE
+			'OTHERS'
+	END AS ST,
+	SAL
+FROM EMP;
+
+
+
+Eg 2:-
+======
+
+select 	ename, JOB, 
+	CASE 
+		WHEN JOB = 'SALESMAN' THEN 'SM'
+		WHEN JOB = 'MANAGER'  THEN 'M'
+		ELSE
+			'OTHERS'
+	END AS ST,
+	SAL
+FROM EMP;
+
+
+
+Eg 3:-
+======
+select 	ename, JOB, 
+	CASE 
+		WHEN SAL < 2000 THEN 'LOW' 
+		WHEN SAL < 4000 THEN 'MED' 
+		ELSE
+			'HIGH'
+	END,
+	SAL
+FROM EMP;
+
+
+---------------------------------
+Differences between DECODE & CASE
+---------------------------------
+
+CASE						DECODE
+=============================================================
+
+a) CASE can take any relational operator	a) DECODE can take only equals(=). 
+
+SELECT ename,sal,job,comm,		
+   CASE
+       WHEN sal < 2000 THEN 'Low'
+       WHEN sal < 4000 THEN 'medium'
+   ELSE
+       'HIGH'
+   END as Status
+FROM emp;
+
+
+
+b) we could use logical operators in CASE	b) It can't take logical operators
+
+CASE
+    WHEN (sal < 4000) AND (sal > 5000) 
+	THEN  'Medium'
+	    ..
+
+
+
+
+c) CASE could be based on different columns	c) DECODE based on only one column
+select ename, sal, COMM
+
+CASE
+
+    WHEN (sal = 4000) AND (comm = 5000) 
+
+	THEN  'Medium'
+
+  when (sal>5000) then 'HIGHT'
+
+ELSE 'LOW' END ,SAL, COMM  FROM EMP
+	    ..
+
+
+
+	
+d) Can be used in both SQL & PLSQL stmts.	d) DECODE can  only be used in SQL stmts.
+
+begin						begin
+  vt := case vstatus 				 select decode														(vstatus,'x','valid','invalid')
+		when 'x' then 				from dual;
+			'valid' 		end;
+		else 
+			'invalid' ;		 
+		end;				 
+end;
+/
+
+
+
+E) CASE works like switch case statement.	e) Works like IF-THEN-ELSE stmt.
+
+
+F) CASE cannot compare NULL values		f) It can compare NULL values
+
+g) CASE is more flexible			g) Not flexible
+
+h) CASE has complex syntax			h) Simple syntax (easy to write).
+
+============================================================================
+
+
+ASSIGNMENT - 1:-
+================
+
+Display the student id and his result. (>50 in every subject then PASS)
+
+marks
+=====
+stid		maths		science		english		social
+101		90		98		97		90
+102		35		25		60		45
+103		90		90		25		90
+104		90		90		51		90
+
+
+
+ select stid, case when (maths>50) and (science>50) and (english>50) and (scoial>50) then 'pass'
+else 'fails' end as result from marks;
+ 
+o/p should be :-
+----------------
+
+stid	result
+==============
+101	pass
+102	fail
+103	fail
+104	pass
+	
+
+Assignment-2
+============
+emps
+====
+empno		gender
+----------------------
+101		M
+102		M
+103		F
+104		F
+
+write an update statement to change table contents as shown:-
+
+empno		gender
+-------------------------
+101		F
+102		F
+103		M
+104		M
+
+A) decode
+B) case
+
+
+update emps set gender = decode(gender,'M','F','F','M');
+
+update emps set gender = case .........
+
+
+
+
+Assignment-3
+============
+SQL> select * from nums ;
+
+        ID
+----------
+        -4
+         4
+        -6
+        -9
+         9
+        -9
+
+
+Write a query to get output as below.
+
+negsum		possum
+======================
+28		13
+
+
+Assignment-3A
+=============
+
+Write a query to get output as below.
+
+negcnt		poscnt
+======================
+4		2
+
+
+Assignment-4
+============
+
+SQL> select * from nums ;
+
+        ID
+----------
+        2
+        41
+        60
+        58
+        90
+        18
+
+Write a query to display output as shown  - MOD(id,2)
+select id , case when mod(id,2)=0 then 'even'
+else 'odd' end as result  from nums
+
+        ID		result
+---------------------------------
+        2		even
+        41		odd
+        60		even
+        58		even
+        91		odd
+        27		odd
+
+Assignment-5
+============
+marks
+=====
+stid		maths		science		english		social
+101		90		98		97		90
+102		35		25		60		45
+103		90		90		25		90
+104		90		90		51		90
+
+
+
+
+create table marks
+(stid number , 
+ maths number,
+ science number,
+ english number,
+social number
+)
+/
+insert into marks values (101, 90, 98, 97, 90);
+insert into marks values (102, 35, 25, 60, 45);
+insert into marks values (103, 90, 90, 25, 90);
+insert into marks values (104, 90, 90, 51, 90);
+
+output should be like below:-
+
+stid	highmarks
+=================
+101	98
+102	60
+103	90
+104	90
+..
+..
+
+
+select stid, greatest(maths, science, english, social) as highmaks from marks;
+
+
+Assignment-6
+============
+
+stmarks
+=======
+
+stid	subj	marks
+=====================
+101	MATHS	90
+101	SCIENCE	80
+101	SOCIAL	60
+101	ENGLISH	70
+102	MATHS	70
+102	SCIENCE	90
+..
+..
+
+output should be like below:-
+
+stid	subj	marks
+=====================
+101	maths	90
+102	science	90
+..
+..
+
+
+
+
+
+select A.stid, A.subj, B.hmarks
+from stmarks A,  (select stid, max(marks) as hmarks from stmarks group by stid) B
+where A.stid = B.stid
+and   A.marks= B.hmarks
+/
+
+select stid, subj, marks
+from stmarks
+where (stid, marks) in (select stid, max(marks) as hmarks from stmarks group by stid)
+/
+
+ 
+ 
+
+
+
+
+
+
+
+solutions
+=========
+
+
+Assignment-3
+============
+
+select * from
+   (select sum(id) as p_sum from nums where id>0),
+   (select sum(id) as n_sum from nums where id<0)
+/
+
+or
+==
+
+select 	SUM(case when id < 0 then ID ELSE 0 end) as n_sum,
+	SUM(case when id > 0 then ID ELSE 0 end) as p_sum
+from nums
+/
+
+
+or
+==
+
+select sum(n_sum), sum(p_sum)
+from
+	(select 
+		case when id < 0 then sum(id) end as n_sum, 
+		case when id > 0 then sum(id) end as p_sum
+	from nums
+	group by id
+	) 
+/
+
+
+
+

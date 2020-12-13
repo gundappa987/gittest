@@ -1,0 +1,203 @@
+==========================
+DCL, Privileges & Roles 
+==========================
+
+
+===========================
+DCL (Data Control Language)
+===========================
+
+** GRANT & REVOKE are called as DCL.
+** They help to provide privileges or take back the granted privilege from a user.
+** Used by Admins (DBAs)
+** DCL Will automatically commit like DDL.
+
+
+==========================================================================
+
+
+===============
+PRIVILEGES
+===============
+- Privilege is like a permission
+- Helps a user/schema to perform any action
+
+
+Types of Privileges :-
+======================
+
+(a) system privileges 	- HELPS TO CREATE DATABASE OBJECTS like TABLES, VIEWS etcc. 
+			- we have > 200 system privileges
+			- Generally, DBA will provide these to normal users.
+			- Granted by a system admin ( "sys" or "system" user )
+Eg:-
+====
+CREATE TABLE
+CREATE USER
+CREATE VIEW
+CREATE SYNONYM
+..
+..
+DROP TABLE
+DROP USER
+DROP VIEW
+DROP SYNONYM etc...
+..
+..
+
+from "system" or "sys" user
+---------------------------
+sql> grant create table, create view to ford;
+
+
+============================================================
+(b) Object Privilege:-  
+	-helps to perform SELECT & DMLs on the objects different schema[user].
+	-owner of object will provide these
+	-helps to access/modify the objects from different schema as well
+
+SELECT	 	-->> TO SELECT DATA FROM A TABLE
+INSERT   	-->> TO ALLOW INSERT INTO A TABLE
+UPDATE   	-->> TO ALLOW UPDATE INTO A TABLE
+DELETE   	-->> TO ALLOW DELETE FROM A TABLE
+EXECUTE     	-->> PROGRAMS LIKE SP, FUNCTION ETC.
+REFERENCES  	-->> To create a FK
+ALL 		-->> includes all the object privileges.
+
+from "scott"
+============
+
+sql> grant select on emp to ford;
+
+sql> grant all on emp to ford;
+
+sql> revoke all on emp from ford;
+
+from "ford"
+===========
+sql> select * from scott.emp;
+
+==================================================================================
+
+Activity : Simulate the scenario of object privileges
+
+Create a user called FORD & give basic privileges
+
+scott
+=====
+select * from emp;  		--> works
+
+ford
+======
+select * from emp; 		--> error.
+select * from scott.emp; 	--> error.
+
+scott
+=====
+grant select on emp to ford;
+
+
+ford
+======
+select * from emp; 		--> error.
+select * from scott.emp; 	--> Works.
+delete from scott.emp; 		--> error, insufficient privileges.
+
+=================================================================================
+
+=====
+NOTE:
+=====
+
+--To check all the system privileges within a user 
+sql> select * from session_privs;
+
+
+--To check all the OBJECT privileges within a user
+SQL> select table_name, table_schema, PRIVILEGE 
+	from all_tab_privs 
+	where grantee='FORD'
+
+--we can grant multiple privileges to multiple users at once, but on same object
+sql> grant delete, insert on emp to ford, user2;
+
+***********Not possible to provide ANY OBJECT privileges on multiple objects at once
+sql> grant insert on emp, delete on dept to user2;  -- error
+=========================================================================
+
+
+
+
+===========================
+ROLES
+===========================
+
+- A role a group of privileges.
+- We can create a role and keep set of privileges in it. We can grant that role to users.
+- It helps to manage privileges & users easily.
+- If we GRANT/REVOKE any privilege from role, then it will affected to all the users granted. 
+
+
+Eg:-
+====
+
+create role test_role
+/
+
+grant create table, create view, create synonym to test_role
+/
+
+grant select on emp to test_role 
+/
+
+grant test_role to user1, user2, user3
+/
+
+=======================================================
+revoke create table from test_role  -->> Revokes only CREATE TABLE privilege from all users.
+/
+
+revoke test_role from user1 -->> Revokes entire role from user1.
+/
+=======================================================
+
+
+Default Roles:-
+===============
+a) CONNECT	-> permits to connect to DB (CREATE SESSION)
+b) RESOURCE	-> helps to create basic DB Objects like tables/synonyms/ etc.
+c) DBA		-> as good as SYS user (he will have all the system privileges)
+
+--from SYSTEM user
+sql> grant dba to scott
+/
+
+
+
+Assignment
+==========
+
+Scenario 1
+==========
+Consider we have three users : SYSTEM, u1, u2
+
+i) Now "SYSTEM" grants a system privilege to "U1". Can "U1" grant the same privilege to"U2" ?
+
+ii) If "SYSTEM" revokes from "U1" then what will happen to "U2" privilege?
+..
+..
+
+
+Scenario 2
+==========
+Consider we have three users : U0, u1, u2
+
+i) Now "u0" grants a OBJECT privilege to "U1". Can "U1" grant the same privilege to"U2" ?
+
+ii) If "U0" revokes from "U1" then what will happen to "U2" privilege?
+..
+..
+
+
+
+

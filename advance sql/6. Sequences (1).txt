@@ -1,0 +1,395 @@
+			=========
+			SEQUENCES
+			=========
+
+* A sequence is a database object which helps to generate sequential values.
+* Sequence definition is stored in database where as sequence values are stored in RAM (memory).
+
+
+Advantages
+-----------
+* Helps to generate primary key values automatically.
+* The values are generated at a faster rate as the values are fetched from the RAM (Memory).
+
+
+Syntax
+======
+SQL>
+    create  sequence  tseq
+    start with 1
+    increment by 1
+/
+
+SQL>select tseq.nextval from dual
+/
+
+SQL>select tseq.currval from dual
+/
+
+====
+
+NOTE:-
+* nextval,currval are called pseudo-columns of the sequence.
+* A sequence can generate only numeric value (+ve,-ve integers only, no fractions , no characters allowed)
+* once the value is accessed from sequence it cannot be put it back
+* roll back is applicable only for table, not for sequence.  
+* SEQUENCES WON'T STORE THE DATA.
+
+===================================================================================
+Using Sequences in a table
+==========================
+create table orders 
+(
+  id 	 number primary key,
+  qty 	 number,
+  price  number,
+  ord_dt date
+)
+/
+
+
+
+create  sequence  tseq
+start with 1
+increment by 1
+/
+
+
+insert into orders values(tseq.nextval, 20, 3000.56, sysdate);
+
+insert into orders values(tseq.nextval, 90, 8000.56, '01-Jun-2018');
+
+commit;
+
+
+select * from orders
+/
+
+
+Alpha-numeric data:-
+====================
+
+insert into test values('C'||tseq.nextval);
+
+
+--------------------------------------
+updating a column with sequence values
+--------------------------------------
+
+alter table dept add sl_nums number;
+
+update dept set sl_nums = tseq.nextval;
+
+===================================================================================
+===================================================================================
+
+
+
+
+Restrictions of nextval and currval
+========================================
+            (or)
+   
+Places where we can use sequence Pseudo-columns
+===============================================
+
+a) SELECT :   
+
+select tseq.nextval from dual;
+
+===================
+
+b) VALUES of INSERT : 
+
+insert into temp values(tseq.nextval, 'name');
+
+===================   
+
+c) SET of UPDATE :  
+
+update emp 
+	set empno = tseq.nextval where empno=7788;
+
+====================
+
+d) Procedural statement [PL/SQL] (from 11g only) 
+
+We can directly assign a sequence to a variable.
+================================================
+   begin
+	vtemp := tseq.nextval;   -- VTEMP is a variable
+   end;
+=============================================
+
+e) We can use in default values (from 12c)
+
+   create table test
+   (
+	id	number default tseq.nextval primary key,  -- from 12c only
+	name	varchar(20)
+   );
+
+  insert into test(name) values('scott');
+  insert into test(name) values('ford');
+
+  select * from test;
+
+  id	name
+  ===========
+  1	scott
+  2	ford
+
+=======================================================================
+Places where we can't use sequence Pseudo-columns [Invalids]
+=======================================================================
+
+- select * from emp where empno = tseq.nextval;  --> WHERE clause, error.
+
+- group by tseq.nextval  --> GROUP BY, error.
+
+- order by tseq.nextval  --> ORDER BY, error.
+
+- SELECT .... FROM .. WHERE .. (SELECT TSEQ.NEXTVAL FROM DUAL); --> SUB-QUERY ERROR
+
+
+
+
+=============================
+Full syntax sequence creation
+=============================
+
+create sequence tseq
+start with 	5		--> 1
+increment by 	2		--> 1
+maxvalue	20		--> no maxvalue (upto 38 digits)
+cycle				--> nocycle
+cache		10		--> 20 --> no. of values cached in RAM/memory
+/
+
+=================================
+
+create sequence newseq;  -- all defaults will be taken 
+
+=================================
+
+** The "cycle" option will start the next set of values from 1
+   instead of "start with" value after reaching MAXVALUE
+
+=================================
+
+--Altering the sequence..
+Alter sequence seq_name
+ increment by 20 
+ cache 5;
+
+- START WITH value cannot be altered, we should drop sequence & re-create the   sequence to change the START WITH value
+
+- All other parameters can be altered
+
+=====================================================================
+
+-----------------------------------------------------------------------
+
+NOTE:  [CHANGING THE START WITH VALUE] *********
+=====
+
+a) Drop the Sequence & re-create the same ..
+
+
+
+b) CHANGING THE START WITH VALUE WITHOUT DROPPING THE SEQUENCE.
+
+SQL> create sequence tseq start with 1 increment by 1;
+SQL> select tseq.nextval from dual;
+SQL> select tseq.nextval from dual;
+SQL> select tseq.nextval from dual;
+SQL> select tseq.nextval from dual;
+   NEXTVAL
+----------
+         4
+
+SQL> alter sequence tseq increment by -4 ;
+
+SQL> select tseq.nextval from dual;
+   NEXTVAL
+----------
+         0
+
+SQL> alter sequence tseq increment by 1;
+
+SQL> select tseq.nextval from dual;
+   NEXTVAL
+----------
+         1
+
+
+-----------------------
+
+NOTE:  For -ve increment we should give "minvalue" parameter.
+
+===========================================================================
+
+operations
+==========
+
+sql> create ..
+
+sql> alter ..
+
+sql> drop sequence r1;
+
+sql> rename seq1 to seq2; 
+-- in this case, sequence will lose 1 full cycle value (cache), it will start from next cycle.
+
+****** even if the server is crashed we will lose 1 full cycle values (cache)
+
+
+NOTE:-
+======
+
+"user_sequences" is used to check properties of all the sequences.
+
+
+
+
+
+Disadvantages/Restrictions/Limitations of the Sequences
+=======================================================
+
+a) We can never put back the number to the sequence after being generated 
+(even after a rollback)
+----
+insert into temp values(seq.nextval, 3000);
+select * from temp;
+rollback; -- rolls back only the table data but not the sequence.
+insert into temp values(seq.nextval, 3000);
+select * from temp;
+----
+This leads to gaps in the sequential data and manually we have to update it later.
+
+
+b) Only one value can be generated per SQL statement per row.
+
+sql> select tseq.nextval from dual; --> 10
+
+sql> select tseq.nextval, tseq.nextval, tseq.currval from dual;
+11 11 11
+
+
+c) CURRVAL should be accessed after NEXTVAL for a new Sequence or in a new session.
+
+sql> create sequence n1;
+sql> select n1.currval from dual; -- error.
+Error -> (ORA-08002: sequence TSEQ.CURRVAL is not yet defined in this session)
+
+
+d) (MAXVALUE > CACHE) && (CACHE  > 1)
+
+SQL> create sequence tseq 
+	start with 1 
+	increment by 1 
+	maxvalue 2 
+	cycle 
+	cache 5;
+
+ERROR -> ORA-04013: number to CACHE must be less than one cycle
+
+
+e) If we rename a sequence or if the server crashed, then we will lose 1 full cycle of a sequence.
+
+
+Assignment -> simulate all the above scenarios.
+
+
+=========================================================================
+
+12c features of sequences
+-------------------------
+
+
+12c - Setting the default values from Sequence
+=========================================================================
+We can use in default values (from 12c)
+
+   create table test
+   (
+	id	number default tseq.nextval,  -- from 12c only
+	name	varchar(20)
+   );
+
+  insert into test(name) values('scott');
+  insert into test(name) values('ford');
+
+  insert into test(id, name) values(9,'miller');
+
+
+  select * from test;
+
+  id	name
+  ===========
+  1	scott
+  2	ford
+  9     miller
+
+
+(2)
+12c Identity property (automatic generation of values for the PK from sequence, it should take the values from sequence always..)
+
+=====================
+create table test
+(
+ id number  generated always as identity (start with 1 increment by 1) primary key,
+ name	varchar(20)
+);
+
+insert into test(name) values('scott');
+insert into test(name) values('blake');
+insert into test values(9, 'blake');    -- error
+insert into test values(null, 'blake'); -- error
+======================================================
+
+(3)
+
+12 c : Global Sequences & Local [session] Sequences 
+===============================================================================
+
+Local  Sequence: It will reset its values in every session.
+Global Sequence: It will not reset its values in every session, values will continue.
+
+
+By default, a sequence is a "global".
+
+
+SQL> create sequence tseq global;
+
+SQL> select tseq.nextval from dual;
+
+=================================
+
+SQL> create sequence tseq session;
+
+SQL> select tseq.nextval from dual; 	1
+SQL> select tseq.nextval from dual; 	2
+SQL> select tseq.nextval from dual; 	3
+SQL> select tseq.nextval from dual; 	4
+
+sql> exit;
+
+sql> select tseq.nextval from dual;  	1
+
+====================================
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+

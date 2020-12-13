@@ -1,0 +1,69 @@
+Virtual column(11g)
+====================
+- it is a derived column (auto-computed column) (formula based)
+- it is a 11g feature
+- virtual columns can't be updated or inserted directly(always calculated automatically)
+- We can create index on virtual columns
+
+
+Example 1:
+===========
+
+CREATE TABLE test
+(
+ A NUMBER, 
+ B NUMBER, 
+ C NUMBER AS (A+B) 		-->> virtual column
+);
+
+
+INSERT INTO test(A,B) VALUES(10,20);
+
+
+select * from test
+/
+
+Example 1a:
+===========
+
+alter table test add d number as (A+20)  -->> virtual column
+/
+
+=====================================================
+
+Example 2:
+===========
+
+CREATE TABLE ORDERS_DATA
+(
+PNAME 		VARCHAR(10),
+COST_PRICE	NUMBER,
+SELL_PRICE	NUMBER,
+PROFIT		NUMBER AS (SELL_PRICE - COST_PRICE)
+)
+/
+
+INSERT INTO ORDERS_DATA(PNAME, COST_PRICE, SELL_PRICE) VALUES('CAMERA', 20000, 22000);
+INSERT INTO ORDERS_DATA(PNAME, COST_PRICE, SELL_PRICE) VALUES('LAPTOP', 40000, 36000);
+
+-------
+
+
+CREATE TABLE test1
+(
+ cname 		varchar(10), 
+ salary 	NUMBER, 
+ cname_len 	NUMBER     AS  (length(cname)),		-->> virtual column
+ cname_short	varchar(3) AS  (SUBSTR(cname,1,3))	-->> virtual column
+)
+/
+
+Assignment:- Try inserting the data to the test1 table?
+SQL> SELECT * FROM TEST1;
+
+CNAME          SALARY  CNAME_LEN CN
+---------- ---------- ---------- --
+SACHIN           3000          6 SA
+SURAJ            2000          5 SU
+PRAVIN          11000          6 PR
+SANTOSH         11000          7 SA

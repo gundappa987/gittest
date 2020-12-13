@@ -1,0 +1,248 @@
+Hierarchial Queries
+===================
+
+- It helps to build an hierarchy(level).
+- We should use "CONNECT BY" & "START WITH" keywords.
+- "LEVEL" pseudo-column can be used to know the exact level.
+- We can traverse the tree in both ways (first to last & last to first).
+
+
+
+7839				level 1
+
+7566, 7698, 7782		level 2
+
+7902, 7788			level 3
+
+7369				level 4
+
+-------------------------------------------------
+-------------------------------------------------
+
+--COMPLETE TREE STR. FROM KING (FROM FIRST LEVEL)
+SELECT  level, empno, ename, mgr 
+FROM emp
+CONNECT BY PRIOR empno=mgr
+start with Ename='KING'
+/
+
+--COMPLETE TREE STR. FROM KING, SORTED BASED ON LEVEL
+SELECT  level as ln, empno, ename, mgr 
+	FROM emp
+	CONNECT BY PRIOR empno=mgr
+	start with Ename='KING'
+order by LEVEL 
+/
+
+
+--COMPLETE TREE STR. FROM JONES (FROM SECOND LEVEL)
+SELECT  level, empno, ename, mgr 
+FROM emp
+CONNECT BY PRIOR empno=mgr
+start with Ename='JONES'
+/
+
+
+--TREE STR. ONLY FOR PARTICULAR CONDITION
+SELECT  level as ln, empno, ename, mgr 
+	FROM emp
+	where deptno = 20 
+	CONNECT BY PRIOR empno=mgr
+	start with Ename='KING'
+order by LEVEL 
+/
+
+
+
+--TRAVERSING IN THE REVERSE ORDER (INTERCHANGE THE CONDITION IN CONNECT BY)
+SELECT  level as ln, empno, ename, mgr
+FROM emp
+CONNECT BY PRIOR mgr = empno
+start with Ename='MARTIN'
+order by LEVEL
+/
+
+
+level -> pseudo-column which gives the level at tree str.
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+
+-- Generating numbers from 1 to 10.
+SELECT LEVEL  
+FROM DUAL
+CONNECT BY LEVEL < 10
+/
+
+select level from dual connect by rownum<=10
+/
+
+
+NOTE:- WM_CONCAT concatenates all the values into a single value using comma.
+======
+
+SELECT WM_CONCAT(ENAME) FROM EMP ;
+
+-- 1,2,3,4,...10
+select wm_concat(level)   -- we can also use LISTAGG function.
+from dual
+connect by rownum <= 10
+/
+
+select listagg(level,',') within group(order by level) from dual connect by rownum<=10
+/
+
+
+-- 1,2,3,4,...10
+WITH rn AS (
+   select level as x
+   from dual connect by rownum<=5)
+select wm_concat(x)
+from rn
+/
+
+
+-- 10,20,30,40,....100
+select wm_concat(level||'0')
+from dual
+connect by rownum <= 10
+/
+
+
+-- 10,20,30,40,....100
+SELECT LISTAGG(LEVEL, '0,') WITHIN GROUP (ORDER BY LEVEL)||'0'  AS NAMES 
+FROM DUAL 
+CONNECT BY LEVEL<=10
+/
+
+
+-- 10,20,30,40,....100
+SELECT TO_NUMBER(LEVEL||'0') AS NUMS
+FROM DUAL
+CONNECT BY LEVEL <= 10
+/
+
+
+-- Generating A to Z
+SELECT chr(64+level)
+FROM DUAL
+CONNECT BY LEVEL < 27
+/
+
+-- A,B,C,D,...Z
+SELECT wm_concat(chr(64+level))
+FROM DUAL
+CONNECT BY LEVEL < 25
+/
+
+
+CHR is an In-built function that returns character for a given ASCII value.
+ASCII is an In-built function that returns ASCII value for a given character value.
+
+-------------------------------------------------------
+================================================================
+
+select substr('oracle',1,2) from dual;  -- or
+select substr('oracle',2,4) from dual;  -- racl
+
+-- prining the characters in separate line
+select substr('sarlakg',level,1)
+from dual
+connect by level <= length('sarlakg')
+/
+
+-------------------------------------------------------
+
+-- interview question.
+
+       LN RESU
+--------- ----
+        1 odd
+        2 even
+        3 odd
+        4 even
+        5 odd
+        6 even
+        7 odd
+        8 even
+        9 odd
+       10 even
+
+select ln,
+	case 
+		when mod(ln,2) = 0 then 'even'
+		else
+		'odd'
+	end as result
+from (select level as ln from dual connect by rownum <= 10)
+/
+
+
+
+
+
+--------------------------------------------------
+
+--WITH CLAUSE
+
+select *
+from (Select * from emp order by sal desc)
+where rownum <= 5
+/
+
+with x as (Select * from emp order by sal desc)
+select *
+from x
+where rownum <= 5
+/
+
+
+Assignments
+===========
+a. Write a query to generate all the dates b/w any 2 dates.
+
+01-jan-2017 and 31-may-2017
+
+
+01-jan-2017
+02-jan-2017
+..
+..
+
+
+
+------------------------------------------------------------------------------------------------
+
+Write a query to generate all the dates between any two dates using hierarchial queries?
+
+
+select TO_DATE('01-JAN-2017','DD-MON-YYYY') + (level-1) as DAY
+from dual
+connect by level<=( TO_DATE('31-JAN-2017','DD-MON-YYYY') - TO_DATE('01-JAN-2017','DD-MON-YYYY')+1) 
+/
+
+
+
+
+
+-- Alternate ways to get numbers from 1 to 10 without using CONNECT BY clause
+
+ select rownum
+  from all_objects
+  where rownum <= 10
+/
+
+
+ select 1 from dual
+ union
+ select 2 from dual
+ union
+ select 3 from dual
+/
+
+
+
+
+
+
+

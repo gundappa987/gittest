@@ -1,0 +1,566 @@
+INDEX
+--------
+* An index is a DB object that improves performance of the SQL statements.
+
+* An index is created on a column of a table.
+
+* A table can have any number of indexes.
+
+* The column used in the search criteria(condition) should be indexed (used in WHERE clause)
+
+* Once we drop a column/table, the associated index is also dropped.
+
+* An index stores the data and hence it occupies the space. [index stores rowid & column value]
+
+* The column that is used in where class should be indexed. 
+
+* An index avoids full table scan(FTS) (i.e. accessing the data sequentially)
+
+* Index uses binary search to fetch the data  and has better performance than FTS.   
+
+* We can't select the data from index because it is in binary format.
+
+--
+--
+
+sql> create index idx1 on emp(sal);
+
+sql> select * from emp where sal=5000;
+
+
+determining the index usage
+---------------------------
+
+method A
+-----------
+* compare the time before and after creating the index.
+
+
+method B
+--------
+* "explain plan" command is used.
+
+- Explain Plan is a DML statement  that generates execution plan of a query, without executing.
+- The execution plan will tell us whether Index is used or not.
+- It helps to identify where the problem is there
+- But it will not fix the problem
+
+
+step-1. generate latest plan by running EXPLAIN PLAN 
+--------------------------------------------------------
+
+> explain plan 
+   for  
+   select * from emp
+  where deptno=20;
+
+
+step-2  display plan
+----------------------------------
+> select * from table (dbms_xplan.display());
+
+
+step-3
+
+analyse the cost
+-----------------
+* lesser the cost better the performance .
+
+* COST is the CPU utilization in percentage [cost is indirectly proportional to execution time]
+
+
+how index works :-
+------------------
+
+* creating an index will create a separate segment called as "index segment".
+
+* this index stores the indexed column along with the corresponding rowid(address).
+
+* here the data is arranged according to the ascending order of the indexed column.
+
+**** when we query based on indexed column, oracle goes to the index directly then applies binary search algorithm  [ divide and search ] and finds out corresponding rowid and directly goes into the address and fetches data.
+
+
+__________________________________________________________
+
+
+how do you tune a query?
+========================
+
+step1 : take the explain plan for the given query (cost A)
+
+step2 : create indexes or re-write the query in a different way using inline view etc.
+
+step3 : take the explain plan for the given query (cost B)
+
+step4 : Analyze the output (higher the cost lesser the performance)
+	The functionality(output) should be same from both the queries.
+
+ 
+___________________________________________________________________________________________________________
+
+
+
+Types:
+======
+
+a) Simple Index
+b) Composite Index
+
+c) Non-unique Index 
+d) Unique Index 
+
+e) B-tree Index
+f) Bitmap Index
+
+g) Functional based Index (FBI)
+
+-------------------------------------
+
+h) Domain Index
+i) Reverse Key Index  	
+			
+j) Partitioned Index 
+	- Local INDEX
+	- GLOBAL INDEX
+
+
+===========================================================
+
+Simple Index & Composite Indexes
+================================
+
+Simple Index 	- in which only one column is used for Index creation.
+
+Composite Index - in which more than one columns is used for Index creation
+		- in composite indexes we can have upto 32 columns.
+		- in composite index the first column should be used in the
+		  WHERE clause to get the benefit of the index.
+		- Order of usage of the columns in the index & the WHERE clause
+		  may be different, still the index is used.
+Eg 1:-
+======
+
+sql> create index idx6 on emp(job);      -- simple
+
+select * 
+from emp
+where job='CLERK';   -->> IDX6
+
+
+Eg 2:-
+======
+
+sql> create index idx2 on emp(deptno,job);        -- composite
+
+
+select * 
+from emp
+where deptno=20
+and   job='CLERK' ;  -->> IDX2
+
+select * 
+from emp
+where job='CLERK'
+and   deptno=20 ;  -->> IDX2
+
+select * 
+from emp
+where job='CLERK' ;  -->> no INDEX is used 
+
+select * 
+from emp
+where deptno=20;     -->> IDX2
+
+========================================================================
+
+
+Unique Index & Non-Unique Index
+===============================
+
+Non-Unique Index : default, will allow duplicates.
+
+Unique Index	 : Not a default. Will not allow duplicate values.
+		 : Whenever we create PK or Unique Key, by default an unique index
+		   gets created.
+
+		** Unique index is faster than Non-unique for SELECT statements.
+		** Unique Index will slow-down the INSERT & UPDATE statements.
+                ** non unique index is faster than unique for insert and update statements.
+
+
+
+sql> create index idx1 on emp(deptno);  	-- Non-unique index
+
+sql> create unique index idx2 on emp(phone);  	-- Unique index
+
+=========================================================================
+
+B* Tree Indexes:  [Balanced Tree Index]
+================
+ - Default type of index
+ - Works on Binary search method.
+ - Balanced-Tree indexes
+ - Used for columns with HIGH cardinality [columns with more distinct values]
+
+sql> create index idx1 on emp(deptno);
+
+
+How a B* Tree Index Works:-
+---------------------------
+**** when we query based on indexed column, oracle goes to the index directly then applies binary search algorithm  [ divide and search ] and finds out corresponding rowid and directly goes into the address and fetches data.
+
+
+
+Bitmap Indexes:
+===============
+
+ - It is a special type of index used for columns with LOW cardinality
+
+		no. of distinct values
+Cardinality =  -----------------------   
+		total no. of records
+
+** Varies between value greater than zero to 1
+** 0.00000000n means lowest cardinality & 1 means highest cardinality.
+** if the cardnality is low  (going towards zero) then use bit map index.
+** if the cardnality is high (going towards one)  then use b*tree index.
+
+	emp (100000 records)
+	====================
+empno	ename 	deptno	  gender 	status
+(pk)			  (m/f)		(A/I/N)
+======================================================
+1001	scott	20	   M		A	
+1002	BLAKE	20	   M		I
+..
+..
+=====================================================
+C(empno)  = 100000/100000 = 1       } B-tree index  	[Higher Cardinality]
+C(gender) = 2/100000 	  = 0.00002 } BITMAP		[Lower  Cardinality]
+C(status) = 3/100000 	  = 0.00003 } BITMAP		[Lower  Cardinality]
+=====================================================
+Example columns in real time projects:-
+	- result (P/F)
+	- status (A/I/N)
+	- bloodgroup (6 distinct values)
+	- gender(m/f)
+	- Eligible_Bonus (Y/N)  [flag columns]
+=====================================================
+
+
+create bitmap index idx_bmap on emp(status)
+/
+
+=====================================================
+
+
+How a Bit Map Index works:-
+
+status
+======
+Real	Bitmap		Rowid
+Value	Value
+===========================================
+
+A  -  	0 	- {R1,  R2, R3, R4, R5 ....}
+I  -  	1 	- {R11, R12, R13, R14, R15 ....} 
+N  -  	2 	- {R21, R22, R23, R24, R25 ....} 
+
+===========================================
+select * from emp where status='I';
+     (select * from emp where status=1) --> oracle understands.
+
+- ******
+  For every distinct value of the column, an unique bitmap value is generated.
+  These bitmap values are stored in the database alongwith ROWID. Whenever we query 
+  based on such column, Oracle will get all ROWIDs and fetches the data from each 
+  of the ROWID.
+
+- Bitmaps are preferred only in DataWareHouse environment, where tables are not 
+  updated regularly.
+
+- DMLs will perform very badly on Bitmap indexes.
+
+- BITMAPS ARE Preferred where b-trees are not efficient.
+
+Eg:-
+====
+
+create index idx1 on emp(deptno)
+/
+ -> b-tree, non-unique, simple
+
+
+create UNIQUE index idx1 on emp(deptno,JOB)
+/
+ -> b-tree, unique, COMPOSITE
+
+
+create BITMAP index idx1 on emp(deptno)
+/
+ -> bitmap, non-unique, simple
+
+
+-- to know indexes on a given table with their types
+select index_name, index_type, uniqueness, VISIBILITY, DOMIDX_STATUS
+from user_indexes
+where table_name='EMP'
+/
+
+
+index_type 	-> NORMAL/bitmap/FBI
+DOMIDX_STATUS	-> if NULL then it is not a domain index
+
+
+"USER_IND_COLUMNS" -->> TO KNOW THE COLUMN OF THE INDEX
+
+--------------------------
+===================================================
+FBI INDEX:-
+------------------
+( Functional based Index )
+
+* generally oracle will not use the index if functions are used in WHERE Clause.
+
+* We can overcome this problem by indexing the function itself and such an index is called FBI.
+
+
+Example for FBI :-
+==================
+
+sql> CREATE INDEX IDX_NAME ON EMP(ENAME);
+
+a) 
+explain plan 
+for
+select * 
+from emp 
+where ename='SCOTT';  
+
+SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY()); --> HERE "IDX_NAME" is used
+
+
+
+b)
+explain plan 
+for
+select * 
+from emp 
+where upper(ename)='SCOTT';  
+
+SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY()); --> HERE index "IDX_NAME" is not used 
+						because of UPPER function..
+
+
+sql> CREATE INDEX IDX_NAME1 ON EMP(upper(ENAME));   -->> FBI.
+
+
+
+Now (a) will use "idx_name" only whereas (b) will use "idx_name1"
+
+
+** FBI can be created for pre-defined & user-defined[UDF] functions.
+** FBI can't be created for Aggregate functions.
+
+=====================================================================
+
+
+select *
+from emp
+where ename like '%S%';  --> Here is index on "ename" field is not used..
+
+
+create index idx_instr on emp(instr(ename,'S'));
+
+
+select *
+from emp
+where instr(ename,'S') > 0;   --> uses "idx_instr" index
+
+
+=====================================================================
+
+Domain Index:-
+============= 
+
+* A domain index is created on a larger text fields [columns] like CLOB'S.
+
+* this type of index is also called as 'ctxsys.context' 
+
+* when we query based on index column we have to use ''contains'' keyword .
+
+* It is used for faster serching and pattren matching logic.
+
+
+PRODUCTS
+========
+
+ID	NAME		QTY	FEEDBACK (CLOB)
+-----------------------------------------------
+101	CAMERA		2	this product is very GOOD as usual.....
+102	LAPTOP1		2	product is bad very bad.....
+103	CAMERA1		2	...........BAD.............
+104	LAPTOP		2	........GOOD.................
+..
+..
+..
+..
+-------------------------------------------------------------
+
+select * from products
+WHERE FEEDBACK like '%GOOD%' ;  -- Btree index is not used at all.
+
+-------------------------------------------------------------
+
+
+create index IDX1 on prod(feedback) indextype is ctxsys.context;
+
+
+select *
+from PROD
+where CONTAINS(feedback,'GOOD') > 0 -- this uses domain index
+/
+
+"CONTANS" should be used when we use Domain Index.
+
+=====================================================================
+
+REVERSE KEY INDEX 
+------------------
+* A RKI helps to improve the speed of mass data loading. (data storing / INSERT statement)
+
+* here the data is stored in the reverse order.
+
+
+PARTITION INDEX
+---------------
+
+* partitioning is the process of dividing the bigger table into many smaller divisons  called as partitions.
+
+* it is used to improve the performanance as we can select the data from a particular partition instead of entire table.
+
+* any index created on such a table is called partition index.
+
+*If we index individual partition then it is called local index.
+
+*If we index entire partition table then it is called global index.
+
+============================================
+
+Invisible Indexes (11g)
+=======================
+
+- Invisible indexes will not use the indexes, even though the column is used in the
+  WHERE clause.
+- Invisible indexes are just like Disabled indexes.
+- By default an index is VISIBLE.
+- It is a 11g feature.
+
+Example:
+========
+
+sql> create index idx1 on emp(ename);  --> by default it is visible
+
+sql> alter index idx1 invisible;
+
+sql> 
+explain plan
+for
+select *
+from emp
+where ename = 'SCOTT'; --> index idx1 is not used
+
+
+sql> alter index idx1 visible;
+
+
+** invisible indexes will be updated during DMLs.
+
+** Invisible Indexes are helpful if we don't want to use the index for some time..
+
+** Query level index & no index can be implemented using hints.
+===============================================================
+
+Disadvantages of indexes
+--------------------------
+* Any update operation performed on index column will have to update both table and 
+the index, also it re-sorts the entire data in the index. As a result the update statement will perform slower.
+
+* creating indexes will occupy space and also it adds to the maintainanace efforts.
+
+* Usage of function will not use the index.( this can be overcome by FBI)
+
+* Index is not used when we are returning most of the records from the table.
+
+* Usage of expression in the indexed column will not use the index.
+
+where SAL+100=2000 --index NOT used
+where sal=2000-100 --index is used 
+
+=======================================
+
+
+
+index operations
+-----------------
+sql>create index Idx_name on emp(sal)
+/
+
+sql>drop index idx_name  
+/
+
+sql> alter index idxjob rename to idxjob2
+/
+
+
+
+-------------------------
+re-building the index :-
+-------------------------
+* rebuilding means re-creating the same index.
+
+rebuild = drop + create.
+
+* when we do mass deletion of data from the table, the data is deleted but not the slots.
+  so we have to rebuild.
+
+* this reduces to index fragmentation and INCREASES the performance.
+
+* rebuilding an index creates a fresh index for better performance.
+
+* in the production environment index should be rebuilt during the off-peak time.
+
+
+sql> alter index idxname1 rebuild ;
+
+
+NOTE:-
+When we re-build the index, it will not allow any DMLs statements.
+
+To overcome this problem, we can use "rebuild online" option.
+
+sql> alter index my_idx rebuild online; 
+
+
+We can also use  "parallel 63" "nologging" to improve the performance.
+
+sql> alter index my_idx rebuild online parallel 63 nologging;
+
+
+
+
+12C FEATURE
+----------------
+* BEFORE 12C, only one type of index is allowed on a column .but  from 12c we can have more than one index of same type on a same column but only one should be visible.
+
+
+
+
+
+
+
+
+
+
+

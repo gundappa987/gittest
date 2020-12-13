@@ -1,0 +1,182 @@
+
+Regular Expressions
+===================
+->derived by unix language
+->pre-fixed with reg_exp
+
+Advantages
+==========
+-better performance as index will be used in REGEXP_LIKE
+-complex things can be done easily
+
+Functions (10g)
+=========
+regexp_like:
+regexp_substr:
+regexp_instr:
+regexp_replace:
+regexp_count:  --> 11g 
+
+
+
+
+REGEXP_LIKE
+===========
+
+
+-- Lists the names whose name is having letter A to D Only.
+select ename
+from   emp
+where   ename like '%A%'  
+or      ename like '%B%'
+or	ename like '%C%'
+or      ename like '%D%'
+/
+
+
+select ename
+From emp
+where regexp_like(ename,'[A-D]') 
+/
+
+
+select ename
+From emp
+where regexp_like(ename,'[AD]')
+/
+
+
+SELECT ENAME
+FROM emp
+WHERE REGEXP_LIKE (Ename, 'Anders(o|e|a)n')
+/
+
+
+SELECT ENAME
+FROM emp
+WHERE REGEXP_LIKE (Ename, '[#$@*^%]')
+/
+
+
+SELECT ENAME
+From EMP
+WHERE REGEXP_LIKE(ENAME,'[0-9]')
+/
+
+ SELECT ENAME
+ From EMP
+ WHERE NOT REGEXP_LIKE(ENAME,'[0-9]')
+ /
+
+
+REGEXP_INSTR
+============
+
+select ENAME
+From EMP
+WHERE INSTR(ENAME,'A') > 0 ;
+/
+
+or
+==
+
+select ename
+From emp
+where regexp_like(ename,'[A]')
+/
+
+or
+==
+
+select ENAME
+From EMP
+WHERE REGEXP_INSTR(ENAME,'A') > 0
+/
+
+-----------
+
+seleCt ENAME
+From EMP
+WHERE REGEXP_INSTR(ENAME,'[[:digit:]]') > 0
+/
+
+--listing the names having lower case letters
+seleCt ENAME
+From EMP
+WHERE REGEXP_INSTR(ENAME, '[[:LOWER:]]') > 0
+/
+
+--listing the names having upper case letters
+SELECT ENAME
+FROM emp
+WHERE REGEXP_INSTR(ENAME,'[[:UPPER:]]') > 0
+/
+
+
+posix
+=====
+[:alnum:] - alphanumeric
+[:alpha:] - alphabets
+[:space:] - non-printable
+[:upper:] - upper alphabets
+[:lower:] - lower alphabets
+[:digit:] - numeric digit
+
+
+regexp_count:  --> 11g 
+=============
+
+select ename, regexp_count(ename,'A') from emp;
+
+
+
+=========================================================
+SQL> SELECT * FROM CUST_TAB ;
+
+        ID PHONE
+---------- ----------
+         1 1234567 
+         2 1@234#567
+         3 1234A567
+         4 1234567
+ create table phone_T 
+(id number,
+ phone varchar(20)
+)
+/
+insert into phone_t values(1, '123456');
+insert into phone_t values(2, '1@345#6');
+insert into phone_t values(3, '1234A56');
+insert into phone_t values(4, '1234567');
+
+--query to get the phone numbers that are having only NUMBERs.
+select *
+From cust_tab
+  WHERE REGEXP_INSTR(phone,'[[:digit:]]') > 0  -- considers only numbers
+  and REGEXP_INSTR(phone,'[[:alpha:]]') = 0    -- eliminates alphabets
+  and REGEXP_INSTR(phone,'[[:space:]]') = 0     -- eliminates spaces
+  and not REGEXP_LIKE (phone, '[#$@*^%]')  	-- eliminates special characters
+/
+
+
+
+select *
+From custs
+where regexp_like(mailid,'[@.]')
+/
+
+
+======================================================================
+-- to replace multiple chrs at once in a string
+SELECT phone, REGEXP_REPLACE (phone, 'A|@|#|$|!|%', 'x')
+FROM cust_tab
+/
+
+
+SELECT REGEXP_REPLACE ('cannes', 'n', 'm', 1, 2, 'i')
+FROM dual;
+====================================================================
+
+
+
+

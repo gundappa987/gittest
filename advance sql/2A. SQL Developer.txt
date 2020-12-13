@@ -1,0 +1,28 @@
+
+Client Tools  
+============
+
+- helps to connect to Oracle Server (DB)
+
+a) SQL* Plus (command line)
+b) SQL* Developer (from oracle, open source software free )
+c) TOAD  (Licensed)
+d) SQL Assist
+e) PL/SQL Developer (Licensed)
+
+
+=====================================================
+
+SQL* Developer 
+==============
+
+ctrl+enter  (f9) -->> executes only the current command which is selected
+
+f5  -->> all commands in the window will be executed like script
+
+f8  -->> command history
+
+f10 -->> generates the execution plan
+
+
+google.com => <<sql developer  pdf guide>>  pdf ....

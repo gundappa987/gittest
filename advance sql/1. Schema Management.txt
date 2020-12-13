@@ -1,0 +1,88 @@
+Oracle Schema
+=============
+- A schema is a logical collection of many db objects.
+- schema = user = owner = account
+- schema is password protected
+- database server (system) will have many databases, 
+- each database can have many users(schemas) 
+- each schema will have many DB objects like tables,views,triggers,SP,functions..
+- SYS & SYSTEM are the default users (Admin users) 
+- SYS & SYSTEM will be present in all the databases and they can never be dropped.
+
+ORCL      				prod
+====					====
+	
+SYS     SYSTEM	 SCOTT			BLAKE		SYS		SYSTEM
+---	------	 -----			-----		---		------
+		 -TABLES		-TABLES
+		   -EMP			  -PROD
+		   -DEPT		  -ORDERS
+		 -VIEWS			-VIEWS	
+		   -V1			  -TESTV
+		   -V2			-FUNCTIONS
+		 -STORED PROCEDURE	  -GETCNT		
+		   -TESTSP1		..
+		   -TESTSP2		..
+		 ..			..
+		 ..			..
+
+=======================================================================================
+
+connection strings
+==================
+
+sql> conn blake/p1@prod
+
+sql> conn scott/tiger@orcl
+
+=======================================================================================
+
+steps for creating a user
+=========================
+
+a) Login as a SYS or SYSTEM user
+
+sql> conn / as sysdba
+
+sql> show user
+<< user is "SYS" >>
+
+b) Run create user command
+
+sql> CREATE USER ford IDENTIFIED BY P1234;
+
+c) Provide basic pivileges to the new user
+
+sql> GRANT CONNECT, RESOURCE TO FORD;
+
+D) Connect to new user
+
+sql> conn ford/P1234;
+
+sql> show user
+<<ford>>
+
+sql> select * from tab;
+<< now rows >>
+
+=====================================================================================
+
+Other Activities by SYSTEM or SYS user
+======================================
+
+sql> Alter user scott account lock;
+
+sql> Alter user scott account unlock;
+
+sql> Alter user scott identified by new1234p;
+
+sql> drop user scott ;
+
+sql> drop user scott cascade;
+
+=====================================================================================
+
+
+
+
+

@@ -1,0 +1,68 @@
+Spooling
+========
+-Helps to copy the SQLPLUS contents to a file
+
+
+---------------
+sql> spool c:\test\logs.txt  -- it creates a file "logs.txt"
+
+sql> select * from emp where deptno  =  20;
+
+sql> select * from dept where deptno =  20;
+
+sql> spool off;
+---------------
+
+
+---------------
+sql> spool c:\test\logs.txt append
+
+sql> select * from emp where job = 'CLERK';
+
+sql> spool off
+---------------
+
+=========
+SCRIPTING
+=========
+- we can keep more than 1 sql command and run it once (script)
+
+
+-------------------c:\test\tabs.txt---------------------------
+
+create table Books 
+(
+	Book_No varchar(10),
+	Book_Name varchar(50) not null,
+	Author varchar(50) not null,
+	NoOfCopies number(5),
+	CONSTRAINT bookNo_pk PRIMARY KEY(Book_No),
+	CONSTRAINT NoOfCopies_chk CHECK(NoOfCopies>0)
+)
+/
+
+
+create table Students
+(
+	Reg_No varchar(10),
+	Name varchar(50) not null,
+	Semester number(1) not null,
+	Address varchar(100) not null,
+	Phone number(10),
+	Email varchar(20),
+	DOJ date,
+	CONSTRAINT RegNo_pk PRIMARY KEY(Reg_No),
+	CONSTRAINT Sem_chk CHECK(Semester BETWEEN 1 AND 8),
+	CONSTRAINT Email_unq UNIQUE(Email)
+)
+/
+
+--------------------------------------------------------------
+
+sql> @c:\test\tabs.txt
+
+--------------------------------------------------------------
+
+
+
+

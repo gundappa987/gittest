@@ -1,0 +1,146 @@
+
+===============
+Merge
+===============
+-Merge is a DML statement which can perform both insert and update in a single statement.
+-We can also perform delete using merge from 10g.
+
+Merge = I + U + D 
+
+
+Example
+=======
+	T1(Table)
+
+Id	Name
+----	-------------
+10	ACCTS
+20	ECOM
+30	BPODOM
+40	Marketing
+50	FINANCE
+60	BANKING
+70	RESEARCH
+80	ITES1
+
+create table t1
+( id number,
+ name varchar(10)
+)
+/
+insert into t1 values (10, 'ACCTS');
+
+insert into t1 values (20, 'ECOM');
+
+insert into t1 values (30, 'BPODOM');
+
+insert into t1 values (40, 'MARKETING');
+
+insert into t1 values (50, 'FINANCE');
+
+insert into t1 values (60, 'BANKING');
+
+insert into t1 values (70, 'RESEARCH');
+
+insert into t1 values (80, 'ITES1');
+
+
+	T2(Table)
+
+Id 	Name
+----	------------
+10	ACCTS
+20	ECOM
+30	BPODOM
+40	Marketing
+50	ITES
+60	PF
+
+CREATE TABLE T2
+( ID NUMBER,
+ NAME VARCHAR(10)
+)
+/
+insert into t2 values (10, 'ACCTS');
+insert into t2 values (20, 'ECOM');
+insert into t2 values (30, 'BPODOM');
+insert into t2 values (40, 'Marketing');
+insert into t2 values (50, 'ITES');
+insert into t2 values (60, 'PF');
+
+50	ITES
+60	PF
+70	RESEARCH
+80	ITES1
+
+
+
+SYNTAX:
+---------------
+MERGE INTO T2 A
+USING T1 B
+	ON (A.id=B.id)
+when matched then
+	update set a.name=b.name
+	--Delete.....
+when not matched then
+	insert(a.id,a.name)
+	values(b.id,b.name);
+
+
+=============================
+
+Q1. How to Check whether MERGE is successful or not ?
+
+Select * from T2
+Minus
+Select * from T1;
+
+- If no rows are returned, then MERGE is Successful, else some records are not merged.
+-  This query can also be used to check the differences in records between any 2 tables.
+
+
+==========================
+
+Advantage:
+----------
+Merge helps to avoid seperate  insert,update, delete statements.
+
+
+Disadvantage:
+-----------------
+If any one record id updated in Table one, it must required to update all the records in second Table too.... 
+Eg:- (Millions of data need to update so this is a drawback).
+
+
+
+Alternate to Merge:
+===================
+
+Alternative option means when we have millions of data is in table, if we merge this it will take time to update all the records,
+
+ so then we use alternative option as below:
+
+
+Drop table T2
+/
+
+
+create table T2
+as
+Select * from T1
+/
+
+
+Another Option
+==============
+truncate table T2
+/
+
+
+insert into T2  Select * from T1
+/
+
+
+
+

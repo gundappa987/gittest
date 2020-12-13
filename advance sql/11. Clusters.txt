@@ -1,0 +1,70 @@
+CLUSTERS
+--------
+--------
+
+* A  cluster is a DB object which can store one OR more tables.
+
+* It will improve the performance of join queries having join condition.
+
+* In clusters tables are stored side by side i.e adjacent to each other.
+
+* when we query based on a cluster table data will be accessed faster because they are stored side by side.   
+
+
+--create a cluster
+create cluster testcc
+(deptno number);
+
+
+--index the cluster
+create index idx1 on testcc(deptno);
+
+
+--create the table and put the same in a cluster
+create table emp1(empno number, ename varchar(20), deptno number)
+cluster testcc(deptno);
+
+
+--create the table and put the same in a cluster
+create table dept1(dname varchar(20), deptno number)
+cluster testcc(deptno);
+
+
+
+--following query will benefit from above cluster
+select a.ename, b.dname
+from emp a, dept b 
+where a.deptno=b.deptno
+/
+
+
+--to get the clusters information
+"USER_CLUSTERS"
+
+=======================================================================
+=======================================================================
+
+
+
+clusterd index	(SQL SERVER)		=	b-tree UNIQUE index (oracle).
+non-clusterd index (SQL SERVER)		=	b-tree non-unique index (ORACLE).
+
+
+
+=======================================================================
+=======================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
